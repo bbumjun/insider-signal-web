@@ -22,10 +22,13 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     insiderTransactions.forEach(t => {
       const value = t.share * (t.transactionPrice || 1);
-      if (t.transactionCode === 'P') {
+      const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
+      const isSell = t.transactionCode === 'S';
+      
+      if (isBuy) {
         buyMap.set(t.transactionDate, (buyMap.get(t.transactionDate) || 0) + value);
         totalBuy += value;
-      } else if (t.transactionCode === 'S') {
+      } else if (isSell) {
         sellMap.set(t.transactionDate, (sellMap.get(t.transactionDate) || 0) + value);
         totalSell += value;
       }
@@ -113,13 +116,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     const markers: SeriesMarker<string>[] = [];
     const seenInsider = new Set<string>();
     insiderTransactions.forEach(t => {
-      if (t.transactionCode !== 'P' && t.transactionCode !== 'S') return;
-      const key = `${t.transactionDate}-${t.transactionCode}`;
+      const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
+      const isSell = t.transactionCode === 'S';
+      
+      if (!isBuy && !isSell) return;
+      
+      const key = `${t.transactionDate}-${isBuy ? 'BUY' : 'SELL'}`;
       if (seenInsider.has(key)) return;
       seenInsider.add(key);
       const priceAtDate = prices.find(p => p.date === t.transactionDate)?.close;
       if (priceAtDate) {
-        const isBuy = t.transactionCode === 'P';
         markers.push({
           time: t.transactionDate,
           position: isBuy ? 'belowBar' : 'aboveBar',
