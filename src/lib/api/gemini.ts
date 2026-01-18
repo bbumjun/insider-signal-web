@@ -7,22 +7,25 @@ const ai = new GoogleGenAI({
 
 export async function generateAnalysis(symbol: string, data: StockData) {
   const prompt = `
-    Analyze the following financial data for ${symbol}:
+    다음 ${symbol} 종목의 재무 데이터를 분석해주세요:
     
-    Insider Transactions:
+    내부자 거래:
     ${JSON.stringify(data.insiderTransactions)}
     
-    Recent News:
+    최근 뉴스:
     ${JSON.stringify(data.news)}
     
-    Stock Price Movement:
+    주가 흐름:
     ${JSON.stringify(data.prices)}
     
-    Task:
-    Provide a concise correlation analysis between insider trades, news, and price movements.
-    Return the response in the following format:
-    1. Key Patterns (bullet points)
-    2. Actionable Insight (one sentence)
+    작업:
+    내부자 거래, 뉴스, 주가 움직임 간의 상관관계를 분석해주세요.
+    
+    응답 형식:
+    1. 주요 패턴 (bullet points)
+    2. 실행 가능한 인사이트 (한 문장)
+    
+    중요: 응답은 반드시 한국어로 작성해주세요.
   `;
 
   const response = await ai.models.generateContent({
