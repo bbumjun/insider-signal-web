@@ -26,7 +26,7 @@ export async function generateAnalysis(symbol: string, data: StockData) {
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.0-flash-lite",
     contents: prompt,
   });
   

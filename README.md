@@ -5,7 +5,7 @@
 ## 🛠 Tech Stack
 - **Framework**: Next.js 16 (App Router)
 - **Database/Cache**: Supabase
-- **AI**: Google Gemini 2.0 Flash
+- **AI**: Google Gemini 3.0 Flash Lite
 - **Data APIs**: Finnhub (Insider/News), Yahoo Finance (Prices)
 - **Styling**: Tailwind CSS, Lucide React (Icons)
 - **Charts**: Lightweight Charts
