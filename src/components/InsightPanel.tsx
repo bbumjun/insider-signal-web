@@ -60,10 +60,47 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
             <Sparkles className="w-5 h-5" />
             <span className="text-sm font-bold uppercase tracking-widest">분석 완료</span>
           </div>
-          <div className="prose prose-invert max-w-none text-slate-300">
-            <div className="whitespace-pre-wrap leading-relaxed">
-              {insight}
-            </div>
+          <div className="space-y-5 text-slate-300">
+            {insight.split('\n\n').map((section, idx) => {
+              const lines = section.trim().split('\n');
+              const header = lines[0];
+              const content = lines.slice(1);
+              
+              let headerColor = 'text-slate-200';
+              if (header.includes('📊')) headerColor = 'text-blue-400';
+              if (header.includes('🎯')) headerColor = 'text-emerald-400';
+              if (header.includes('⚠️')) headerColor = 'text-amber-400';
+              if (header.includes('💡')) headerColor = 'text-purple-400';
+              
+              return (
+                <div key={idx} className="space-y-2">
+                  <h3 className={`text-base font-bold ${headerColor} flex items-center gap-2`}>
+                    {header}
+                  </h3>
+                  <div className="pl-4 space-y-1.5">
+                    {content.map((line, lineIdx) => {
+                      const trimmed = line.trim();
+                      if (!trimmed) return null;
+                      
+                      if (trimmed.startsWith('•')) {
+                        return (
+                          <div key={lineIdx} className="flex gap-2 text-sm leading-relaxed">
+                            <span className="text-slate-500 flex-shrink-0">•</span>
+                            <span>{trimmed.substring(1).trim()}</span>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <p key={lineIdx} className="text-sm leading-relaxed">
+                          {trimmed}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div className="pt-6 border-t border-slate-800">
             <p className="text-[10px] text-slate-500 italic">
