@@ -3,12 +3,12 @@
 내부자 거래, 주가 차트, 그리고 최신 뉴스를 AI로 통합 분석하여 투자 인사이트를 제공하는 웹 서비스입니다.
 
 ## 🛠 Tech Stack
-- **Framework**: Next.js 14 (App Router)
-- **Database/Auth**: Supabase
-- **AI**: Google Gemini 1.5 Flash
-- **Data APIs**: Finnhub (Insider/News), Alpha Vantage (Prices)
+- **Framework**: Next.js 16 (App Router)
+- **Database/Cache**: Supabase
+- **AI**: Google Gemini 2.0 Flash
+- **Data APIs**: Finnhub (Insider/News), Yahoo Finance (Prices)
 - **Styling**: Tailwind CSS, Lucide React (Icons)
-- **Charts**: Recharts
+- **Charts**: Lightweight Charts
 
 ---
 
