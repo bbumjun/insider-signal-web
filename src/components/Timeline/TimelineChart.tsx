@@ -13,10 +13,12 @@ interface TimelineChartProps {
 
 export default function TimelineChart({ symbol, prices, insiderTransactions, news }: TimelineChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const { buyData, sellData, totalBuy, totalSell } = useMemo(() => {
+  const { buyData, sellData, totalBuy, totalSell, transactionsByDate } = useMemo(() => {
     const buyMap = new Map<string, number>();
     const sellMap = new Map<string, number>();
+    const transactionsByDate = new Map<string, InsiderTransaction[]>();
     let totalBuy = 0;
     let totalSell = 0;
 
@@ -24,6 +26,13 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       const value = t.share * (t.transactionPrice || 1);
       const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
       const isSell = t.transactionCode === 'S';
+      
+      if (isBuy || isSell) {
+        if (!transactionsByDate.has(t.transactionDate)) {
+          transactionsByDate.set(t.transactionDate, []);
+        }
+        transactionsByDate.get(t.transactionDate)!.push(t);
+      }
       
       if (isBuy) {
         buyMap.set(t.transactionDate, (buyMap.get(t.transactionDate) || 0) + value);
@@ -42,7 +51,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       .map(([time, value]) => ({ time, value: -value, color: '#ef4444' }))
       .sort((a, b) => a.time.localeCompare(b.time));
 
-    return { buyData, sellData, totalBuy, totalSell };
+    return { buyData, sellData, totalBuy, totalSell, transactionsByDate };
   }, [insiderTransactions]);
 
   useEffect(() => {
@@ -151,6 +160,95 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     seriesMarkers.setMarkers(markers.sort((a, b) => (a.time > b.time ? 1 : -1)));
     chart.timeScale().fitContent();
 
+    chart.subscribeCrosshairMove((param) => {
+      if (!tooltipRef.current || !chartContainerRef.current) return;
+
+      if (!param.time || !param.point) {
+        tooltipRef.current.style.display = 'none';
+        return;
+      }
+
+      const dateStr = param.time as string;
+      const transactions = transactionsByDate.get(dateStr);
+
+      if (!transactions || transactions.length === 0) {
+        tooltipRef.current.style.display = 'none';
+        return;
+      }
+
+      const buyTransactions = transactions.filter(t => ['P', 'A', 'M'].includes(t.transactionCode));
+      const sellTransactions = transactions.filter(t => t.transactionCode === 'S');
+
+      const formatValue = (v: number) => {
+        if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+        if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+        if (v >= 1e3) return `$${(v / 1e3).toFixed(1)}K`;
+        return `$${v.toFixed(0)}`;
+      };
+
+      const getCodeLabel = (code: string) => {
+        switch (code) {
+          case 'P': return '공개시장 매수';
+          case 'A': return '주식 수여';
+          case 'M': return '옵션 행사';
+          case 'S': return '공개시장 매도';
+          default: return code;
+        }
+      };
+
+      let html = `<div class="text-xs font-bold mb-2">${dateStr}</div>`;
+
+      if (buyTransactions.length > 0) {
+        html += '<div class="mb-2">';
+        html += '<div class="text-emerald-400 font-semibold mb-1">매수</div>';
+        buyTransactions.forEach(t => {
+          const value = t.share * (t.transactionPrice || 1);
+          html += `<div class="text-slate-300 text-[10px] leading-relaxed">`;
+          html += `${t.name}<br/>`;
+          html += `${getCodeLabel(t.transactionCode)} · ${Number(t.share).toLocaleString()}주<br/>`;
+          html += `${formatValue(value)}`;
+          html += `</div>`;
+        });
+        html += '</div>';
+      }
+
+      if (sellTransactions.length > 0) {
+        html += '<div>';
+        html += '<div class="text-red-400 font-semibold mb-1">매도</div>';
+        sellTransactions.forEach(t => {
+          const value = t.share * (t.transactionPrice || 1);
+          html += `<div class="text-slate-300 text-[10px] leading-relaxed">`;
+          html += `${t.name}<br/>`;
+          html += `${getCodeLabel(t.transactionCode)} · ${Number(t.share).toLocaleString()}주<br/>`;
+          html += `${formatValue(value)}`;
+          html += `</div>`;
+        });
+        html += '</div>';
+      }
+
+      tooltipRef.current.innerHTML = html;
+      tooltipRef.current.style.display = 'block';
+
+      const chartRect = chartContainerRef.current.getBoundingClientRect();
+      const tooltipWidth = 200;
+      const tooltipHeight = tooltipRef.current.offsetHeight;
+
+      let left = param.point.x + 10;
+      let top = param.point.y - tooltipHeight / 2;
+
+      if (left + tooltipWidth > chartRect.width) {
+        left = param.point.x - tooltipWidth - 10;
+      }
+
+      if (top < 0) top = 10;
+      if (top + tooltipHeight > chartRect.height) {
+        top = chartRect.height - tooltipHeight - 10;
+      }
+
+      tooltipRef.current.style.left = `${left}px`;
+      tooltipRef.current.style.top = `${top}px`;
+    });
+
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth });
@@ -162,7 +260,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [prices, insiderTransactions, news, buyData, sellData]);
+  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate]);
 
   if (!prices || prices.length === 0) {
     return (
@@ -181,7 +279,13 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
   return (
     <div className="w-full h-full flex flex-col gap-2">
-      <div ref={chartContainerRef} className="w-full h-[380px]" />
+      <div ref={chartContainerRef} className="w-full h-[380px] relative">
+        <div
+          ref={tooltipRef}
+          className="absolute z-10 pointer-events-none bg-slate-900/95 border border-slate-700 rounded-lg p-3 shadow-xl backdrop-blur-sm"
+          style={{ display: 'none', minWidth: '200px', maxWidth: '300px' }}
+        />
+      </div>
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-4 text-xs">
           <span className="text-slate-500">내부자 거래</span>
