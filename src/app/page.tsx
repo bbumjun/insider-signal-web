@@ -13,17 +13,17 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            Market Intelligence
+            마켓 인텔리전스
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-            Decode the Market with<br />
+            내부자 시그널로<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-              Insider Signals
+              시장을 읽다
             </span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Uncover correlations between insider trading, news events, and price action. 
-            Powered by Gemini AI for real-time patterns.
+            내부자 거래, 뉴스, 주가 흐름의 상관관계를 분석합니다.
+            Gemini AI가 실시간으로 패턴을 찾아드립니다.
           </p>
         </div>
 
@@ -32,18 +32,18 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
           <FeatureCard 
             icon={<TrendingUp className="w-6 h-6 text-emerald-400" />}
-            title="Price Correlation"
-            description="See exactly where insiders bought or sold on the stock chart."
+            title="주가 상관관계"
+            description="내부자가 언제 매수/매도했는지 차트에서 한눈에 확인하세요."
           />
           <FeatureCard 
             icon={<Activity className="w-6 h-6 text-cyan-400" />}
-            title="News Integration"
-            description="Link major headlines directly to price volatility and insider moves."
+            title="뉴스 통합"
+            description="주요 헤드라인과 주가 변동, 내부자 거래의 연결고리를 파악하세요."
           />
           <FeatureCard 
             icon={<Award className="w-6 h-6 text-purple-400" />}
-            title="AI Insights"
-            description="Get instant analysis on track records and upcoming trends."
+            title="AI 인사이트"
+            description="트랙 레코드와 향후 트렌드에 대한 즉각적인 분석을 받아보세요."
           />
         </div>
       </div>

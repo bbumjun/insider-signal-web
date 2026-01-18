@@ -93,7 +93,7 @@ export default function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setIsOpen(true)}
-          placeholder="Enter stock ticker (e.g. AAPL, NVDA)..."
+          placeholder="종목 코드 입력 (예: AAPL, NVDA)..."
           className="w-full h-14 pl-12 pr-24 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
         />
         {isLoading ? (
@@ -105,7 +105,7 @@ export default function SearchBar() {
           type="submit"
           className="absolute right-2 top-2 bottom-2 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
         >
-          Analyze
+          분석
         </button>
       </form>
 

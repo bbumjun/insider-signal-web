@@ -4,6 +4,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 const PERIODS = ['1M', '3M', '1Y'] as const;
 
+const PERIOD_LABELS: Record<string, string> = {
+  '1M': '1개월',
+  '3M': '3개월',
+  '1Y': '1년',
+};
+
 interface PeriodSelectorProps {
   currentPeriod: string;
 }
@@ -30,7 +36,7 @@ export default function PeriodSelector({ currentPeriod }: PeriodSelectorProps) {
               : 'bg-slate-800 border-slate-700 hover:bg-slate-700'
           }`}
         >
-          {p}
+          {PERIOD_LABELS[p]}
         </button>
       ))}
     </div>

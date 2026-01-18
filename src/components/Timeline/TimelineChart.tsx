@@ -161,7 +161,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
   if (!prices || prices.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
-        No price data available for {symbol}
+        {symbol}의 주가 데이터가 없습니다
       </div>
     );
   }
@@ -178,14 +178,14 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       <div ref={chartContainerRef} className="w-full h-[380px]" />
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-4 text-xs">
-          <span className="text-slate-500">Insider Trading</span>
+          <span className="text-slate-500">내부자 거래</span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-emerald-400">Buy {formatValue(totalBuy)}</span>
+            <span className="text-emerald-400">매수 {formatValue(totalBuy)}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-red-400">Sell {formatValue(totalSell)}</span>
+            <span className="text-red-400">매도 {formatValue(totalSell)}</span>
           </span>
         </div>
       </div>

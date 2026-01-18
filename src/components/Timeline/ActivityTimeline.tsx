@@ -29,7 +29,7 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
   if (activities.length === 0) {
     return (
       <div className="p-12 text-center text-slate-500 italic">
-        No recent activity detected for this symbol.
+        이 종목의 최근 활동이 없습니다.
       </div>
     );
   }
@@ -47,8 +47,8 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                   : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
               )}>
                 {activity.type === 'insider' 
-                  ? activity.data.transactionCode === 'P' ? 'Insider Buy' : 'Insider Sell'
-                  : 'News'}
+                  ? activity.data.transactionCode === 'P' ? '내부자 매수' : '내부자 매도'
+                  : '뉴스'}
               </span>
               <span className="text-slate-500 text-xs">{activity.date}</span>
             </div>
@@ -60,12 +60,12 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
           </div>
           <h4 className="text-sm font-medium text-slate-200 leading-snug group-hover:text-white transition-colors">
             {activity.type === 'insider' 
-              ? `${activity.data.name} ${activity.data.transactionCode === 'P' ? 'bought' : 'sold'} ${Number(activity.data.share).toLocaleString()} shares`
+              ? `${activity.data.name} ${activity.data.transactionCode === 'P' ? '매수' : '매도'} ${Number(activity.data.share).toLocaleString()}주`
               : activity.data.headline}
           </h4>
           {activity.type === 'insider' && (
             <p className="text-xs text-slate-500 mt-1">
-              Price: ${activity.data.transactionPrice} | Code: {activity.data.transactionCode}
+              가격: ${activity.data.transactionPrice} | 코드: {activity.data.transactionCode}
             </p>
           )}
         </div>

@@ -43,7 +43,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
       {loading && (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
           <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-          <p className="text-slate-400 animate-pulse font-medium">Gemini is analyzing market signals...</p>
+          <p className="text-slate-400 animate-pulse font-medium">Gemini가 시장 시그널을 분석 중입니다...</p>
         </div>
       )}
 
@@ -58,7 +58,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
         <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center gap-2 text-emerald-500">
             <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-bold uppercase tracking-widest">Analysis Complete</span>
+            <span className="text-sm font-bold uppercase tracking-widest">분석 완료</span>
           </div>
           <div className="prose prose-invert max-w-none text-slate-300">
             <div className="whitespace-pre-wrap leading-relaxed">
@@ -67,7 +67,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           </div>
           <div className="pt-6 border-t border-slate-800">
             <p className="text-[10px] text-slate-500 italic">
-              AI-generated content may be inaccurate. Data is refreshed daily.
+              AI 생성 콘텐츠는 부정확할 수 있습니다. 데이터는 매일 갱신됩니다.
             </p>
           </div>
         </div>

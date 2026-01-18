@@ -90,7 +90,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
                 {symbol}
-                <span className="text-slate-500 text-sm font-normal">Stock Analysis</span>
+                <span className="text-slate-500 text-sm font-normal">종목 분석</span>
               </h1>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 shadow-2xl">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold">Price Action & Signals</h2>
+            <h2 className="text-lg font-bold">주가 흐름 & 시그널</h2>
             <PeriodSelector currentPeriod={period} />
           </div>
           <div className="h-[400px] w-full">
@@ -120,14 +120,14 @@ export default async function StockPage({ params, searchParams }: StockPageProps
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           <div className="lg:col-span-5 flex flex-col">
-            <h3 className="text-lg font-bold mb-4">Activity Timeline</h3>
+            <h3 className="text-lg font-bold mb-4">활동 타임라인</h3>
             <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-y-auto max-h-[600px] custom-scrollbar">
               <ActivityTimeline insiderTransactions={data.insiderTransactions} news={data.news} />
             </div>
           </div>
           
           <div className="lg:col-span-7 flex flex-col">
-            <h3 className="text-lg font-bold mb-4">AI Pattern Insights</h3>
+            <h3 className="text-lg font-bold mb-4">AI 패턴 인사이트</h3>
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex-1 min-h-[400px]">
               <InsightPanel symbol={symbol} data={data} />
             </div>
