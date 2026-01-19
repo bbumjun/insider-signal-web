@@ -12,12 +12,13 @@ import PeriodSelector from '@/components/PeriodSelector';
 
 const yahooFinance = new YahooFinance();
 
-type Period = '1M' | '3M' | '1Y';
+type Period = '1M' | '3M' | '1Y' | '5Y';
 
 const PERIOD_DAYS: Record<Period, number> = {
   '1M': 30,
   '3M': 90,
   '1Y': 365,
+  '5Y': 365 * 5,
 };
 
 interface StockPageProps {
@@ -73,7 +74,7 @@ async function getStockData(symbol: string, period: Period): Promise<StockData> 
 export default async function StockPage({ params, searchParams }: StockPageProps) {
   const { symbol } = await params;
   const { period: periodParam } = await searchParams;
-  const period: Period = (['1M', '3M', '1Y'] as const).includes(periodParam as Period) 
+  const period: Period = (['1M', '3M', '1Y', '5Y'] as const).includes(periodParam as Period) 
     ? (periodParam as Period) 
     : '3M';
   const data = await getStockData(symbol, period);

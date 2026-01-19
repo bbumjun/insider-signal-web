@@ -4,12 +4,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const PERIODS = ['1M', '3M', '1Y'] as const;
+const PERIODS = ['1M', '3M', '1Y', '5Y'] as const;
 
 const PERIOD_LABELS: Record<string, string> = {
   '1M': '1개월',
   '3M': '3개월',
   '1Y': '1년',
+  '5Y': '5년',
 };
 
 interface PeriodSelectorProps {
