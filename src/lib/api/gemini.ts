@@ -156,14 +156,34 @@ export async function generateAnalysis(symbol: string, data: StockData) {
     - 각 bullet point는 20자 이내로 간결하게
   `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-  });
-  
-  if (!response.text) {
-    throw new Error('Empty response from Gemini');
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      
+      if (!response.text) {
+        throw new Error('Empty response from Gemini');
+      }
+      
+      return response.text;
+    } catch (error) {
+      lastError = error as Error;
+      const isRetryable = lastError.message?.includes('503') || 
+                          lastError.message?.includes('overloaded') ||
+                          lastError.message?.includes('UNAVAILABLE');
+      
+      if (isRetryable && attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      throw error;
+    }
   }
-  
-  return response.text;
+
+  throw lastError || new Error('Failed after retries');
 }
