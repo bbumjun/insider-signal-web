@@ -147,9 +147,9 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         const hasOpenMarketBuy = openMarketBuyDates.has(t.transactionDate);
         markers.push({
           time: t.transactionDate,
-          position: isBuy ? 'belowBar' : 'aboveBar',
+          position: hasOpenMarketBuy && isBuy ? 'aboveBar' : (isBuy ? 'belowBar' : 'aboveBar'),
           color: isBuy ? (hasOpenMarketBuy ? '#fbbf24' : '#10b981') : '#ef4444',
-          shape: hasOpenMarketBuy && isBuy ? 'arrowUp' : 'circle',
+          shape: hasOpenMarketBuy && isBuy ? 'arrowDown' : 'circle',
           text: hasOpenMarketBuy && isBuy ? '★' : '',
         });
       }
