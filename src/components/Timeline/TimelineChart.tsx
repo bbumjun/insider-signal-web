@@ -174,19 +174,22 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     seriesMarkers.setMarkers(markers.sort((a, b) => (a.time > b.time ? 1 : -1)));
     chart.timeScale().fitContent();
 
-    chart.subscribeCrosshairMove((param) => {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let tooltipLocked = false;
+
+    const hideTooltip = () => {
+      if (tooltipRef.current) {
+        tooltipRef.current.style.display = 'none';
+        tooltipLocked = false;
+      }
+    };
+
+    const showTooltip = (dateStr: string, point: { x: number; y: number }) => {
       if (!tooltipRef.current || !chartContainerRef.current) return;
 
-      if (!param.time || !param.point) {
-        tooltipRef.current.style.display = 'none';
-        return;
-      }
-
-      const dateStr = param.time as string;
       const transactions = transactionsByDate.get(dateStr);
-
       if (!transactions || transactions.length === 0) {
-        tooltipRef.current.style.display = 'none';
+        if (!tooltipLocked) hideTooltip();
         return;
       }
 
@@ -210,7 +213,12 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         }
       };
 
-      let html = `<div class="text-xs font-bold mb-2">${dateStr}</div>`;
+      let html = `<div class="flex items-center justify-between mb-2">`;
+      html += `<span class="text-xs font-bold">${dateStr}</span>`;
+      if (isTouchDevice) {
+        html += `<button class="tooltip-close text-slate-400 hover:text-white text-lg leading-none px-1">×</button>`;
+      }
+      html += `</div>`;
 
       const groupByPerson = (txns: typeof transactions) => {
         const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string> }>();
@@ -269,17 +277,24 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       tooltipRef.current.innerHTML = html;
       tooltipRef.current.style.display = 'block';
+      if (isTouchDevice) tooltipLocked = true;
+
+      const closeBtn = tooltipRef.current.querySelector('.tooltip-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', hideTooltip);
+      }
 
       const chartRect = chartContainerRef.current.getBoundingClientRect();
-      const tooltipWidth = 200;
+      const tooltipWidth = tooltipRef.current.offsetWidth || 200;
       const tooltipHeight = tooltipRef.current.offsetHeight;
 
-      let left = param.point.x + 10;
-      let top = param.point.y - tooltipHeight / 2;
+      let left = point.x + 10;
+      let top = point.y - tooltipHeight / 2;
 
       if (left + tooltipWidth > chartRect.width) {
-        left = param.point.x - tooltipWidth - 10;
+        left = point.x - tooltipWidth - 10;
       }
+      if (left < 0) left = 10;
 
       if (top < 0) top = 10;
       if (top + tooltipHeight > chartRect.height) {
@@ -288,7 +303,26 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       tooltipRef.current.style.left = `${left}px`;
       tooltipRef.current.style.top = `${top}px`;
+    };
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.time || !param.point) {
+        if (!isTouchDevice) hideTooltip();
+        return;
+      }
+      if (isTouchDevice && tooltipLocked) return;
+      showTooltip(param.time as string, param.point);
     });
+
+    const handleTouchOutside = (e: TouchEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        hideTooltip();
+      }
+    };
+
+    if (isTouchDevice) {
+      document.addEventListener('touchstart', handleTouchOutside);
+    }
 
     const handleResize = () => {
       if (chartContainerRef.current) {
@@ -302,6 +336,9 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (isTouchDevice) {
+        document.removeEventListener('touchstart', handleTouchOutside);
+      }
       chart.remove();
     };
   }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, period]);
