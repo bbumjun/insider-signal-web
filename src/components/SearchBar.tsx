@@ -72,7 +72,10 @@ export default function SearchBar() {
   }, []);
 
   const handleSelect = (symbol: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     setQuery(symbol);
+    setResults([]);
     setIsOpen(false);
     router.push(`/stock/${symbol}`);
   };
