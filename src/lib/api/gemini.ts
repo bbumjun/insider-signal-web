@@ -52,25 +52,56 @@ function analyzeOptionPatterns(transactions: InsiderTransaction[]) {
   return patterns;
 }
 
+function analyzeOpenMarketBuys(transactions: InsiderTransaction[]) {
+  const openMarketBuys = transactions.filter(t => t.transactionCode === 'P');
+  if (openMarketBuys.length === 0) return '';
+
+  const totalValue = openMarketBuys.reduce((sum, t) => sum + (t.share * (t.transactionPrice || 0)), 0);
+  const buyers = [...new Set(openMarketBuys.map(t => t.name))];
+  
+  const formatValue = (v: number) => {
+    if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+    if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+    if (v >= 1e3) return `$${(v / 1e3).toFixed(1)}K`;
+    return `$${v.toFixed(0)}`;
+  };
+
+  return `
+⭐ 공개시장 매수 감지 (강력 긍정 시그널):
+- 총 ${openMarketBuys.length}건, ${formatValue(totalValue)} 규모
+- 매수자: ${buyers.join(', ')}
+- 내부자가 자기 돈으로 공개시장에서 직접 매수한 것으로, 가장 강력한 긍정 시그널입니다.
+`;
+}
+
 export async function generateAnalysis(symbol: string, data: StockData) {
   const optionPatterns = analyzeOptionPatterns(data.insiderTransactions);
   const optionAnalysis = optionPatterns.length > 0 
     ? `\n스톡옵션 행사 패턴 분석:\n${optionPatterns.join('\n')}\n` 
     : '';
+  
+  const openMarketAnalysis = analyzeOpenMarketBuys(data.insiderTransactions);
 
   const prompt = `
     다음 ${symbol} 종목의 재무 데이터를 분석해주세요:
     
     내부자 거래:
     ${JSON.stringify(data.insiderTransactions)}
-    ${optionAnalysis}
+    ${openMarketAnalysis}${optionAnalysis}
     최근 뉴스:
     ${JSON.stringify(data.news)}
     
     주가 흐름:
     ${JSON.stringify(data.prices)}
     
-    [스톡옵션 행사 분석 가이드라인]
+    [내부자 거래 분석 가이드라인]
+    
+    ★★★ 공개시장 매수 (코드 P) - 가장 강력한 긍정 시그널 ★★★
+    - 내부자가 자기 돈으로 공개시장에서 직접 매수
+    - 주가가 저평가되어 있거나 향후 상승을 확신한다는 증거
+    - 공개 매수가 있다면 반드시 핵심 요약과 주요 발견에 강조해서 언급
+    
+    [스톡옵션 행사 분석]
     내부자 스톡옵션 행사는 행사 이후 행동에 따라 시그널이 달라집니다:
     
     1. 긍정적 시그널 - "행사 후 보유": 옵션 행사 후 매도 없이 보유 → 주가 상승 기대
@@ -107,7 +138,8 @@ export async function generateAnalysis(symbol: string, data: StockData) {
     - 각 섹션은 간결하고 명확하게
     - 이모지를 포함한 정확한 형식 준수
     - 불필요한 설명 제거, 핵심만 전달
-    - 스톡옵션 행사 패턴이 있다면 반드시 분석에 포함
+    - 공개시장 매수(P)가 있다면 가장 먼저, 가장 강조해서 언급
+    - 스톡옵션 행사 패턴이 있다면 분석에 포함
   `;
 
   const response = await ai.models.generateContent({

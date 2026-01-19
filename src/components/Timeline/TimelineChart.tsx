@@ -124,7 +124,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const markers: SeriesMarker<string>[] = [];
     const seenInsider = new Set<string>();
+    const openMarketBuyDates = new Set<string>();
+    
     insiderTransactions.forEach(t => {
+      if (t.transactionCode === 'P') {
+        openMarketBuyDates.add(t.transactionDate);
+      }
+    });
+    
+    insiderTransactions.forEach(t => {
+      const isOpenMarketBuy = t.transactionCode === 'P';
       const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
       const isSell = t.transactionCode === 'S';
       
@@ -135,12 +144,13 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       seenInsider.add(key);
       const priceAtDate = prices.find(p => p.date === t.transactionDate)?.close;
       if (priceAtDate) {
+        const hasOpenMarketBuy = openMarketBuyDates.has(t.transactionDate);
         markers.push({
           time: t.transactionDate,
           position: isBuy ? 'belowBar' : 'aboveBar',
-          color: isBuy ? '#10b981' : '#ef4444',
-          shape: 'circle',
-          text: '',
+          color: isBuy ? (hasOpenMarketBuy ? '#fbbf24' : '#10b981') : '#ef4444',
+          shape: hasOpenMarketBuy && isBuy ? 'arrowUp' : 'circle',
+          text: hasOpenMarketBuy && isBuy ? '★' : '',
         });
       }
     });
@@ -218,14 +228,21 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         return Array.from(codes).map(code => getCodeLabel(code)).join(', ');
       };
 
+      const hasOpenMarketBuy = buyTransactions.some(t => t.transactionCode === 'P');
+      
       if (buyTransactions.length > 0) {
         const groupedBuys = groupByPerson(buyTransactions);
         html += '<div class="mb-2">';
-        html += '<div class="text-emerald-400 font-semibold mb-1">매수</div>';
+        if (hasOpenMarketBuy) {
+          html += '<div class="text-yellow-400 font-semibold mb-1 flex items-center gap-1">⭐ 강력 매수 시그널</div>';
+        } else {
+          html += '<div class="text-emerald-400 font-semibold mb-1">매수</div>';
+        }
         groupedBuys.forEach(g => {
-          html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
+          const isOpenMarket = g.codes.has('P');
+          html += `<div class="${isOpenMarket ? 'text-yellow-200' : 'text-slate-300'} text-[10px] leading-relaxed mb-1">`;
           html += `${g.name}<br/>`;
-          html += `<span class="text-slate-500">${getCodesLabel(g.codes)}</span><br/>`;
+          html += `<span class="${isOpenMarket ? 'text-yellow-400/70' : 'text-slate-500'}">${getCodesLabel(g.codes)}</span><br/>`;
           html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
           html += `</div>`;
         });
