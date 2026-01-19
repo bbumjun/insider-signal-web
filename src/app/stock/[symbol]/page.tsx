@@ -4,11 +4,12 @@ import ActivityTimeline from '@/components/Timeline/ActivityTimeline';
 import InsightPanel from '@/components/InsightPanel';
 import { fetchInsiderTransactions, fetchCompanyNews } from '@/lib/api/finnhub';
 import { getMockStockData } from '@/lib/utils/mockData';
-import { ChevronLeft, Share2, Star } from 'lucide-react';
+import { ChevronLeft, Star } from 'lucide-react';
 import Link from 'next/link';
 import { StockData } from '@/types';
 import YahooFinance from 'yahoo-finance2';
 import PeriodSelector from '@/components/PeriodSelector';
+import ShareButton from '@/components/ShareButton';
 
 const yahooFinance = new YahooFinance();
 
@@ -94,10 +95,8 @@ export default async function StockPage({ params, searchParams }: StockPageProps
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
-              <Share2 className="w-5 h-5" />
-            </button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <ShareButton symbol={symbol} />
             <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
               <Star className="w-5 h-5" />
             </button>
