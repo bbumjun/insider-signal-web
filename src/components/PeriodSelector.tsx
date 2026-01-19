@@ -35,7 +35,7 @@ export default function PeriodSelector({ currentPeriod }: PeriodSelectorProps) {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1.5 sm:gap-2">
       {PERIODS.map((p) => {
         const isLoading = isPending && pendingPeriod === p;
         const isActive = currentPeriod === p && !isPending;
@@ -46,7 +46,7 @@ export default function PeriodSelector({ currentPeriod }: PeriodSelectorProps) {
             key={p}
             onClick={() => handlePeriodChange(p)}
             disabled={isPending}
-            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all border flex items-center gap-1.5 ${
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs font-bold rounded-lg transition-all border flex items-center gap-1 sm:gap-1.5 ${
               isLoading
                 ? 'bg-emerald-500/30 border-emerald-500/50 text-emerald-400'
                 : isActive

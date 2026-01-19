@@ -56,26 +56,26 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   return (
     <div className="h-full flex flex-col">
       {loading && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-          <p className="text-slate-400 animate-pulse font-medium">Gemini가 시장 시그널을 분석 중입니다...</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center space-y-3 sm:space-y-4">
+          <Loader2 className="w-6 sm:w-8 h-6 sm:h-8 text-emerald-500 animate-spin" />
+          <p className="text-slate-400 animate-pulse font-medium text-sm sm:text-base">Gemini가 시장 시그널을 분석 중입니다...</p>
         </div>
       )}
 
       {error && !loading && (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-          <AlertCircle className="w-8 h-8 text-red-500" />
-          <p className="text-red-400 font-medium">{error}</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center space-y-3 sm:space-y-4">
+          <AlertCircle className="w-6 sm:w-8 h-6 sm:h-8 text-red-500" />
+          <p className="text-red-400 font-medium text-sm sm:text-base">{error}</p>
         </div>
       )}
 
       {insight && !loading && (
-        <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center gap-2 text-emerald-500">
-            <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-bold uppercase tracking-widest">분석 완료</span>
+            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest">분석 완료</span>
           </div>
-          <div className="space-y-5 text-slate-300">
+          <div className="space-y-4 sm:space-y-5 text-slate-300">
             {insight.split('\n\n').map((section, idx) => {
               const lines = section.trim().split('\n');
               const header = lines[0];
@@ -89,11 +89,11 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
               if (header.includes('💡')) headerColor = 'text-purple-400';
               
               return (
-                <div key={idx} className="space-y-2">
-                  <h3 className={`text-base font-bold ${headerColor} flex items-center gap-2`}>
+                <div key={idx} className="space-y-1.5 sm:space-y-2">
+                  <h3 className={`text-sm sm:text-base font-bold ${headerColor} flex items-center gap-2`}>
                     {header}
                   </h3>
-                  <div className="pl-4 space-y-1.5">
+                  <div className="pl-3 sm:pl-4 space-y-1 sm:space-y-1.5">
                     {content.map((line, lineIdx) => {
                       const trimmed = line.trim();
                       if (!trimmed) return null;
@@ -118,8 +118,8 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
               );
             })}
           </div>
-          <div className="pt-6 border-t border-slate-800">
-            <p className="text-[10px] text-slate-500 italic">
+          <div className="pt-4 sm:pt-6 border-t border-slate-800">
+            <p className="text-[9px] sm:text-[10px] text-slate-500 italic">
               AI 생성 콘텐츠는 부정확할 수 있습니다. 데이터는 매일 갱신됩니다.
             </p>
           </div>

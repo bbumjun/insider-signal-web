@@ -28,7 +28,7 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
 
   if (activities.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-500 italic">
+      <div className="p-8 sm:p-12 text-center text-slate-500 italic text-sm sm:text-base">
         이 종목의 최근 활동이 없습니다.
       </div>
     );
@@ -43,13 +43,13 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
         
         return (
           <div key={i} className={cn(
-            "p-4 hover:bg-white/5 transition-colors group cursor-pointer",
+            "p-3 sm:p-4 hover:bg-white/5 transition-colors group cursor-pointer",
             isOpenMarketBuy && "bg-emerald-500/5 border-l-2 border-emerald-500"
           )}>
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-1.5 sm:mb-2">
               <div className="flex items-center gap-2">
                 <span className={cn(
-                  "text-[10px] px-2 py-0.5 rounded border font-medium tracking-wider uppercase",
+                  "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded border font-medium tracking-wider uppercase",
                   activity.type === 'insider' 
                     ? isBuy ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
                     : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
@@ -59,21 +59,21 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                     : '뉴스'}
                 </span>
                 {isOpenMarketBuy && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-400" />
+                  <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold flex items-center gap-1">
+                    <Star className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-yellow-400" />
                     강력 시그널
                   </span>
                 )}
-                <span className="text-slate-500 text-xs">{activity.date}</span>
+                <span className="text-slate-500 text-[10px] sm:text-xs">{activity.date}</span>
               </div>
               {activity.type === 'insider' ? (
-                isBuy ? <ArrowUpCircle className={cn("w-4 h-4", isOpenMarketBuy ? "text-yellow-400" : "text-emerald-400")} /> : <ArrowDownCircle className="w-4 h-4 text-red-400" />
+                isBuy ? <ArrowUpCircle className={cn("w-3.5 sm:w-4 h-3.5 sm:h-4", isOpenMarketBuy ? "text-yellow-400" : "text-emerald-400")} /> : <ArrowDownCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-red-400" />
               ) : (
-                <Newspaper className="w-4 h-4 text-blue-400" />
+                <Newspaper className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-blue-400" />
               )}
             </div>
             <h4 className={cn(
-              "text-sm font-medium leading-snug group-hover:text-white transition-colors",
+              "text-xs sm:text-sm font-medium leading-snug group-hover:text-white transition-colors",
               isOpenMarketBuy ? "text-emerald-300" : "text-slate-200"
             )}>
               {activity.type === 'insider' 
@@ -81,7 +81,7 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                 : activity.data.headline}
             </h4>
             {activity.type === 'insider' && (
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">
                 {isOpenMarketBuy ? '공개시장 매수' : activity.data.transactionCode === 'M' ? '옵션 행사' : activity.data.transactionCode === 'A' ? '주식 수여' : '공개시장 매도'} · ${activity.data.transactionPrice?.toLocaleString() || 0}
               </p>
             )}

@@ -110,16 +110,16 @@ export default function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="종목 코드 입력 (예: AAPL, NVDA)..."
-          className="w-full h-14 pl-12 pr-24 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+          className="w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-20 sm:pr-24 rounded-xl sm:rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-sm sm:text-base"
         />
         {isLoading ? (
-          <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 animate-spin" />
+          <Loader2 className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
         ) : (
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 sm:w-5 h-4 sm:h-5" />
         )}
         <button
           type="submit"
-          className="absolute right-2 top-2 bottom-2 px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
+          className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base"
         >
           분석
         </button>

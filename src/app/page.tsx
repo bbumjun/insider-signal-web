@@ -6,7 +6,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white selection:bg-emerald-500/30">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent)] pointer-events-none" />
       
-      <div className="max-w-7xl mx-auto px-6 pt-32 pb-20 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-20 relative">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold mb-6 uppercase tracking-wider">
             <span className="relative flex h-2 w-2">
@@ -15,13 +15,13 @@ export default function Home() {
             </span>
             마켓 인텔리전스
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-4 sm:mb-6">
             내부자 시그널로<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
               시장을 읽다
             </span>
           </h1>
-          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
             내부자 거래, 뉴스, 주가 흐름의 상관관계를 분석합니다.
             Gemini AI가 실시간으로 패턴을 찾아드립니다.
           </p>
@@ -29,7 +29,7 @@ export default function Home() {
 
         <SearchBar />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-32">
           <FeatureCard 
             icon={<TrendingUp className="w-6 h-6 text-emerald-400" />}
             title="주가 상관관계"
@@ -53,7 +53,7 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-emerald-500/30 transition-all group">
+    <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 hover:border-emerald-500/30 transition-all group">
       <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
         {icon}
       </div>

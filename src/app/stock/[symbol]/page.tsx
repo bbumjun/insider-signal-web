@@ -81,16 +81,16 @@ export default async function StockPage({ params, searchParams }: StockPageProps
   return (
     <main className="min-h-screen bg-black text-white selection:bg-emerald-500/30">
       <header className="border-b border-slate-800 bg-black/50 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </Link>
             <div className="h-6 w-px bg-slate-800" />
             <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-1 sm:gap-2">
                 {symbol}
-                <span className="text-slate-500 text-sm font-normal">종목 분석</span>
+                <span className="text-slate-500 text-xs sm:text-sm font-normal">종목 분석</span>
               </h1>
             </div>
           </div>
@@ -105,30 +105,30 @@ export default async function StockPage({ params, searchParams }: StockPageProps
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold">주가 흐름 & 시그널</h2>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <section className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
+            <h2 className="text-base sm:text-lg font-bold">주가 흐름 & 시그널</h2>
             <PeriodSelector currentPeriod={period} />
           </div>
-          <div className="h-[400px] w-full">
+          <div className="h-[300px] sm:h-[350px] lg:h-[400px] w-full">
             <Suspense fallback={<div className="w-full h-full bg-slate-800/20 animate-pulse rounded-xl" />}>
               <TimelineChart symbol={symbol} prices={data.prices} insiderTransactions={data.insiderTransactions} news={data.news} period={period} />
             </Suspense>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
           <div className="lg:col-span-5 flex flex-col">
-            <h3 className="text-lg font-bold mb-4">활동 타임라인</h3>
-            <div className="bg-slate-900/40 border border-slate-800 rounded-2xl overflow-y-auto max-h-[600px] custom-scrollbar">
+            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">활동 타임라인</h3>
+            <div className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl overflow-y-auto max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] custom-scrollbar">
               <ActivityTimeline insiderTransactions={data.insiderTransactions} news={data.news} />
             </div>
           </div>
           
           <div className="lg:col-span-7 flex flex-col">
-            <h3 className="text-lg font-bold mb-4">AI 패턴 인사이트</h3>
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex-1 min-h-[400px]">
+            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">AI 패턴 인사이트</h3>
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl flex-1 min-h-[350px] sm:min-h-[400px]">
               <InsightPanel symbol={symbol} data={data} />
             </div>
           </div>
