@@ -46,6 +46,16 @@ function getTransactionDescription(code: string) {
   }
 }
 
+function cleanSummaryText(text: string) {
+  return text
+    .replace(/â€[^a-zA-Z]*/g, '...')
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default function ActivityTimeline({ insiderTransactions, news }: ActivityTimelineProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -170,10 +180,10 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                       </div>
                     </>
                   ) : (
-                    <>
+                    <div className="space-y-3">
                       {activity.data.summary && (
-                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                          {activity.data.summary}
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-4">
+                          {cleanSummaryText(activity.data.summary)}
                         </p>
                       )}
                       {activity.data.url && (
@@ -181,7 +191,7 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                           href={activity.data.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                          className="inline-flex items-center gap-2 text-xs sm:text-sm bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-2 rounded-lg transition-colors border border-blue-500/20"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           원문 보기
@@ -190,7 +200,7 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
                       {!activity.data.summary && !activity.data.url && (
                         <p className="text-xs text-slate-500 italic">추가 정보가 없습니다.</p>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
