@@ -20,25 +20,41 @@ export default function SearchBar() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortControllerRef.current) abortControllerRef.current.abort();
 
     if (query.length < 1) {
       setResults([]);
       setIsOpen(false);
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
+    setIsOpen(true);
+    
     debounceRef.current = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setResults(data.result || []);
-      setIsOpen(data.result?.length > 0);
-      setIsLoading(false);
-      setSelectedIndex(-1);
-    }, 200);
+      abortControllerRef.current = new AbortController();
+      
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+          signal: abortControllerRef.current.signal,
+        });
+        const data = await res.json();
+        setResults(data.result || []);
+        setIsOpen(data.result?.length > 0);
+        setSelectedIndex(-1);
+      } catch (e) {
+        if (e instanceof Error && e.name !== 'AbortError') {
+          console.error('Search error:', e);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -109,24 +125,37 @@ export default function SearchBar() {
         </button>
       </form>
 
-      {isOpen && results.length > 0 && (
+      {isOpen && (
         <ul className="absolute z-50 w-full mt-2 py-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
-          {results.map((item, index) => (
-            <li key={item.symbol}>
-              <button
-                type="button"
-                onClick={() => handleSelect(item.symbol)}
-                className={`w-full px-4 py-3 flex items-center gap-4 text-left transition-colors ${
-                  index === selectedIndex
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'hover:bg-slate-800'
-                }`}
-              >
-                <span className="font-bold text-white min-w-[60px]">{item.displaySymbol}</span>
-                <span className="text-slate-400 text-sm truncate">{item.description}</span>
-              </button>
+          {isLoading ? (
+            [...Array(4)].map((_, i) => (
+              <li key={i} className="px-4 py-3 flex items-center gap-4 animate-pulse">
+                <div className="h-5 w-14 bg-slate-700 rounded" />
+                <div className="h-4 flex-1 bg-slate-800 rounded" />
+              </li>
+            ))
+          ) : results.length > 0 ? (
+            results.map((item, index) => (
+              <li key={item.symbol}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(item.symbol)}
+                  className={`w-full px-4 py-3 flex items-center gap-4 text-left transition-colors ${
+                    index === selectedIndex
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="font-bold text-white min-w-[60px]">{item.displaySymbol}</span>
+                  <span className="text-slate-400 text-sm truncate">{item.description}</span>
+                </button>
+              </li>
+            ))
+          ) : (
+            <li className="px-4 py-3 text-slate-500 text-sm text-center">
+              검색 결과가 없습니다
             </li>
-          ))}
+          )}
         </ul>
       )}
     </div>
