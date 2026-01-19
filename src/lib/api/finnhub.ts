@@ -1,12 +1,12 @@
 import { StockPrice, InsiderTransaction, CompanyNews } from '@/types';
-import { withCache } from '@/lib/cache/supabaseCache';
+import { withCache, getCachedWithoutExpiry, setCachePermanent } from '@/lib/cache/supabaseCache';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const API_KEY = process.env.FINNHUB_API_KEY;
 
 const CACHE_TTL = {
   INSIDER: 360,
-  NEWS: 60,
+  NEWS_FETCH: 60,
 };
 
 async function fetchInsiderTransactionsRaw(symbol: string): Promise<InsiderTransaction[]> {
@@ -37,12 +37,51 @@ export async function fetchInsiderTransactions(symbol: string): Promise<InsiderT
 }
 
 export async function fetchCompanyNews(symbol: string, from: string, to: string): Promise<CompanyNews[]> {
-  const cacheKey = `news:${symbol.toUpperCase()}:${from}:${to}`;
-  return withCache(
-    cacheKey,
-    () => fetchCompanyNewsRaw(symbol, from, to),
-    { ttlMinutes: CACHE_TTL.NEWS }
-  );
+  const upperSymbol = symbol.toUpperCase();
+  const accumulatedKey = `news_accumulated:${upperSymbol}`;
+  const lastFetchKey = `news_last_fetch:${upperSymbol}`;
+  
+  const lastFetch = await getCachedWithoutExpiry<string>(lastFetchKey);
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  
+  let newNews: CompanyNews[] = [];
+  const shouldFetch = !lastFetch || (now - new Date(lastFetch).getTime() > oneHour);
+  
+  if (shouldFetch) {
+    console.log(`[News] Fetching fresh news for ${upperSymbol}`);
+    try {
+      newNews = await fetchCompanyNewsRaw(symbol, from, to);
+      await setCachePermanent(lastFetchKey, new Date().toISOString());
+    } catch (e) {
+      console.error(`[News] Failed to fetch: ${e}`);
+    }
+  }
+  
+  const existingNews = await getCachedWithoutExpiry<CompanyNews[]>(accumulatedKey) || [];
+  
+  const newsMap = new Map<string, CompanyNews>();
+  
+  [...existingNews, ...newNews].forEach(n => {
+    const key = n.url || `${n.datetime}-${n.headline}`;
+    if (!newsMap.has(key)) {
+      newsMap.set(key, n);
+    }
+  });
+  
+  const mergedNews = Array.from(newsMap.values())
+    .sort((a, b) => (b.datetime || 0) - (a.datetime || 0));
+  
+  if (newNews.length > 0) {
+    console.log(`[News] Accumulated ${mergedNews.length} total news for ${upperSymbol} (+${newNews.length} new)`);
+    await setCachePermanent(accumulatedKey, mergedNews);
+  }
+  
+  const fromDate = new Date(from);
+  return mergedNews.filter(n => {
+    const newsDate = n.datetime ? new Date(n.datetime * 1000) : null;
+    return newsDate && newsDate >= fromDate;
+  });
 }
 
 export async function fetchStockCandles(symbol: string): Promise<StockPrice[]> {
