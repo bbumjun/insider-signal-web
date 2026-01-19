@@ -199,18 +199,23 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       let html = `<div class="text-xs font-bold mb-2">${dateStr}</div>`;
 
       const groupByPerson = (txns: typeof transactions) => {
-        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number }>();
+        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string> }>();
         txns.forEach(t => {
           const existing = grouped.get(t.name);
           const value = t.share * (t.transactionPrice || 1);
           if (existing) {
             existing.totalShares += t.share;
             existing.totalValue += value;
+            existing.codes.add(t.transactionCode);
           } else {
-            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value });
+            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value, codes: new Set([t.transactionCode]) });
           }
         });
         return Array.from(grouped.values());
+      };
+
+      const getCodesLabel = (codes: Set<string>) => {
+        return Array.from(codes).map(code => getCodeLabel(code)).join(', ');
       };
 
       if (buyTransactions.length > 0) {
@@ -220,6 +225,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         groupedBuys.forEach(g => {
           html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
           html += `${g.name}<br/>`;
+          html += `<span class="text-slate-500">${getCodesLabel(g.codes)}</span><br/>`;
           html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
           html += `</div>`;
         });
@@ -233,6 +239,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         groupedSells.forEach(g => {
           html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
           html += `${g.name}<br/>`;
+          html += `<span class="text-slate-500">${getCodesLabel(g.codes)}</span><br/>`;
           html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
           html += `</div>`;
         });
