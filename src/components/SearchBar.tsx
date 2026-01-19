@@ -21,10 +21,16 @@ export default function SearchBar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isSelectingRef = useRef(false);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortControllerRef.current) abortControllerRef.current.abort();
+
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
 
     if (query.length < 1) {
       setResults([]);
@@ -74,9 +80,11 @@ export default function SearchBar() {
   const handleSelect = (symbol: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortControllerRef.current) abortControllerRef.current.abort();
+    isSelectingRef.current = true;
     setQuery(symbol);
     setResults([]);
     setIsOpen(false);
+    setIsLoading(false);
     router.push(`/stock/${symbol}`);
   };
 
