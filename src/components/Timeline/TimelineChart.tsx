@@ -9,9 +9,10 @@ interface TimelineChartProps {
   prices: StockPrice[];
   insiderTransactions: InsiderTransaction[];
   news: CompanyNews[];
+  period?: '1M' | '3M' | '1Y';
 }
 
-export default function TimelineChart({ symbol, prices, insiderTransactions, news }: TimelineChartProps) {
+export default function TimelineChart({ symbol, prices, insiderTransactions, news, period = '3M' }: TimelineChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -155,16 +156,18 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       }
     });
 
-    const seenNews = new Set<string>();
-    news.forEach(n => {
-      const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
-      if (!date || seenNews.has(date)) return;
-      seenNews.add(date);
-      const priceAtDate = prices.find(p => p.date === date)?.close;
-      if (priceAtDate) {
-        markers.push({ time: date, position: 'inBar', color: '#3b82f6', shape: 'circle', text: '' });
-      }
-    });
+    if (period === '1M') {
+      const seenNews = new Set<string>();
+      news.forEach(n => {
+        const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
+        if (!date || seenNews.has(date)) return;
+        seenNews.add(date);
+        const priceAtDate = prices.find(p => p.date === date)?.close;
+        if (priceAtDate) {
+          markers.push({ time: date, position: 'inBar', color: '#3b82f6', shape: 'circle', text: '' });
+        }
+      });
+    }
 
     const seriesMarkers = createSeriesMarkers(areaSeries);
     seriesMarkers.setMarkers(markers.sort((a, b) => (a.time > b.time ? 1 : -1)));
@@ -297,7 +300,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       window.removeEventListener('resize', handleResize);
       chart.remove();
     };
-  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate]);
+  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, period]);
 
   if (!prices || prices.length === 0) {
     return (

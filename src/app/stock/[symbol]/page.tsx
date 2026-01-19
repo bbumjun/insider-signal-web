@@ -113,7 +113,7 @@ export default async function StockPage({ params, searchParams }: StockPageProps
           </div>
           <div className="h-[400px] w-full">
             <Suspense fallback={<div className="w-full h-full bg-slate-800/20 animate-pulse rounded-xl" />}>
-              <TimelineChart symbol={symbol} prices={data.prices} insiderTransactions={data.insiderTransactions} news={data.news} />
+              <TimelineChart symbol={symbol} prices={data.prices} insiderTransactions={data.insiderTransactions} news={data.news} period={period} />
             </Suspense>
           </div>
         </section>
