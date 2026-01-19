@@ -17,6 +17,7 @@ export default function SearchBar() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
@@ -85,6 +86,7 @@ export default function SearchBar() {
     setResults([]);
     setIsOpen(false);
     setIsLoading(false);
+    setIsNavigating(true);
     router.push(`/stock/${symbol}`);
   };
 
@@ -93,6 +95,7 @@ export default function SearchBar() {
     if (selectedIndex >= 0 && results[selectedIndex]) {
       handleSelect(results[selectedIndex].symbol);
     } else if (query.trim()) {
+      setIsNavigating(true);
       router.push(`/stock/${query.trim().toUpperCase()}`);
     }
   };
@@ -130,8 +133,10 @@ export default function SearchBar() {
         )}
         <button
           type="submit"
-          className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base"
+          disabled={isNavigating}
+          className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base flex items-center gap-2"
         >
+          {isNavigating && <Loader2 className="w-4 h-4 animate-spin" />}
           분석
         </button>
       </form>
