@@ -58,6 +58,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
   useEffect(() => {
     if (!chartContainerRef.current || !prices.length) return;
 
+    const containerHeight = chartContainerRef.current.clientHeight || 300;
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
@@ -68,7 +69,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         horzLines: { color: '#1e293b' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 380,
+      height: containerHeight,
       timeScale: {
         borderColor: '#334155',
       },
@@ -291,7 +292,10 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        chart.applyOptions({ 
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight || 300,
+        });
       }
     };
     window.addEventListener('resize', handleResize);
@@ -319,22 +323,22 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
   return (
     <div className="w-full h-full flex flex-col gap-2">
-      <div ref={chartContainerRef} className="w-full h-[380px] relative">
+      <div ref={chartContainerRef} className="w-full flex-1 min-h-0 relative">
         <div
           ref={tooltipRef}
           className="absolute z-10 pointer-events-none bg-slate-900/95 border border-slate-700 rounded-lg p-3 shadow-xl backdrop-blur-sm"
           style={{ display: 'none', minWidth: '200px', maxWidth: '300px' }}
         />
       </div>
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-4 text-xs">
-          <span className="text-slate-500">내부자 거래</span>
+      <div className="flex items-center justify-between px-1 sm:px-2 pt-1">
+        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
+          <span className="text-slate-500 hidden sm:inline">내부자 거래</span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500" />
             <span className="text-emerald-400">매수 {formatValue(totalBuy)}</span>
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-500" />
             <span className="text-red-400">매도 {formatValue(totalSell)}</span>
           </span>
         </div>

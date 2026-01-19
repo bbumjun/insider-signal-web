@@ -46,38 +46,38 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
             "p-3 sm:p-4 hover:bg-white/5 transition-colors group cursor-pointer",
             isOpenMarketBuy && "bg-emerald-500/5 border-l-2 border-emerald-500"
           )}>
-            <div className="flex items-start justify-between mb-1.5 sm:mb-2">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <span className={cn(
-                  "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded border font-medium tracking-wider uppercase",
+                  "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded border font-medium tracking-wider uppercase whitespace-nowrap",
                   activity.type === 'insider' 
                     ? isBuy ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
                     : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                 )}>
                   {activity.type === 'insider' 
-                    ? isBuy ? '내부자 매수' : '내부자 매도'
+                    ? isBuy ? '매수' : '매도'
                     : '뉴스'}
                 </span>
                 {isOpenMarketBuy && (
-                  <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold flex items-center gap-1">
+                  <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold flex items-center gap-0.5 whitespace-nowrap">
                     <Star className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-yellow-400" />
-                    강력 시그널
+                    강력
                   </span>
                 )}
-                <span className="text-slate-500 text-[10px] sm:text-xs">{activity.date}</span>
+                <span className="text-slate-500 text-[10px] sm:text-xs whitespace-nowrap">{activity.date}</span>
               </div>
               {activity.type === 'insider' ? (
-                isBuy ? <ArrowUpCircle className={cn("w-3.5 sm:w-4 h-3.5 sm:h-4", isOpenMarketBuy ? "text-yellow-400" : "text-emerald-400")} /> : <ArrowDownCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-red-400" />
+                isBuy ? <ArrowUpCircle className={cn("w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0", isOpenMarketBuy ? "text-yellow-400" : "text-emerald-400")} /> : <ArrowDownCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-red-400 flex-shrink-0" />
               ) : (
-                <Newspaper className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-blue-400" />
+                <Newspaper className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-blue-400 flex-shrink-0" />
               )}
             </div>
             <h4 className={cn(
-              "text-xs sm:text-sm font-medium leading-snug group-hover:text-white transition-colors",
+              "text-xs sm:text-sm font-medium leading-snug group-hover:text-white transition-colors line-clamp-2",
               isOpenMarketBuy ? "text-emerald-300" : "text-slate-200"
             )}>
               {activity.type === 'insider' 
-                ? `${activity.data.name} ${isBuy ? '매수' : '매도'} ${Number(activity.data.share).toLocaleString()}주`
+                ? `${activity.data.name} ${Number(activity.data.share).toLocaleString()}주`
                 : activity.data.headline}
             </h4>
             {activity.type === 'insider' && (
