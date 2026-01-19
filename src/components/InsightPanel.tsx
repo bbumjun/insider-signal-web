@@ -56,9 +56,38 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   return (
     <div className="h-full flex flex-col">
       {loading && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 text-center space-y-3 sm:space-y-4">
-          <Loader2 className="w-6 sm:w-8 h-6 sm:h-8 text-emerald-500 animate-spin" />
-          <p className="text-slate-400 animate-pulse font-medium text-sm sm:text-base">Gemini가 시장 시그널을 분석 중입니다...</p>
+        <div className="flex-1 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-slate-700/50" />
+              <div className="h-4 w-24 rounded bg-slate-700/50" />
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="h-5 w-32 rounded bg-slate-700/50" />
+                <div className="h-4 w-full rounded bg-slate-800/50" />
+                <div className="h-4 w-3/4 rounded bg-slate-800/50" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-5 w-28 rounded bg-slate-700/50" />
+                <div className="h-4 w-full rounded bg-slate-800/50" />
+                <div className="h-4 w-5/6 rounded bg-slate-800/50" />
+                <div className="h-4 w-2/3 rounded bg-slate-800/50" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-5 w-24 rounded bg-slate-700/50" />
+                <div className="h-4 w-full rounded bg-slate-800/50" />
+                <div className="h-4 w-4/5 rounded bg-slate-800/50" />
+              </div>
+            </div>
+          </div>
+          <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 flex justify-center">
+            <div className="flex items-center gap-2 text-emerald-500/70">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs sm:text-sm font-medium">AI 분석 중...</span>
+            </div>
+          </div>
         </div>
       )}
 
