@@ -83,6 +83,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
               
               let headerColor = 'text-slate-200';
               if (header.includes('📊')) headerColor = 'text-blue-400';
+              if (header.includes('📈')) headerColor = 'text-cyan-400';
               if (header.includes('🎯')) headerColor = 'text-emerald-400';
               if (header.includes('⚠️')) headerColor = 'text-amber-400';
               if (header.includes('💡')) headerColor = 'text-purple-400';
