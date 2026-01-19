@@ -9,7 +9,7 @@ interface TimelineChartProps {
   prices: StockPrice[];
   insiderTransactions: InsiderTransaction[];
   news: CompanyNews[];
-  period?: '1M' | '3M' | '1Y' | '5Y';
+  period?: '1M' | '3M' | '1Y';
 }
 
 export default function TimelineChart({ symbol, prices, insiderTransactions, news, period = '3M' }: TimelineChartProps) {
