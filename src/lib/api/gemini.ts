@@ -140,6 +140,14 @@ export async function generateAnalysis(symbol: string, data: StockData) {
     - 불필요한 설명 제거, 핵심만 전달
     - 공개시장 매수(P)가 있다면 가장 먼저, 가장 강조해서 언급
     - 스톡옵션 행사 패턴이 있다면 분석에 포함
+    
+    문체 규칙 (매우 중요):
+    - "~입니다", "~합니다" 대신 "~임", "~함" 체언 종결 사용
+    - 예: "불확실성이 존재합니다" → "불확실성 존재"
+    - 예: "매도가 많습니다" → "매도 다수"
+    - 예: "긍정적입니다" → "긍정적"
+    - **강조** 마크다운 사용 금지, 그냥 텍스트로 작성
+    - 각 bullet point는 20자 이내로 간결하게
   `;
 
   const response = await ai.models.generateContent({

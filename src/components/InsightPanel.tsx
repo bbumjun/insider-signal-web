@@ -9,6 +9,21 @@ interface InsightPanelProps {
   data: StockData;
 }
 
+function formatText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const content = part.slice(2, -2);
+      return (
+        <span key={i} className="text-white font-semibold">
+          {content}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,14 +101,14 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
                         return (
                           <div key={lineIdx} className="flex gap-2 text-sm leading-relaxed">
                             <span className="text-slate-500 flex-shrink-0">•</span>
-                            <span>{trimmed.substring(1).trim()}</span>
+                            <span>{formatText(trimmed.substring(1).trim())}</span>
                           </div>
                         );
                       }
                       
                       return (
                         <p key={lineIdx} className="text-sm leading-relaxed">
-                          {trimmed}
+                          {formatText(trimmed)}
                         </p>
                       );
                     })}
