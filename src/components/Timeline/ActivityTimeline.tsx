@@ -151,8 +151,8 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
             </button>
 
             {isExpanded && (
-              <div className="px-3 sm:px-4 pb-3 sm:pb-4 animate-in slide-in-from-top-2 duration-200">
-                <div className="bg-slate-800/50 rounded-lg p-3 sm:p-4 space-y-3">
+              <div className="mx-3 sm:mx-4 mb-3 sm:mb-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="bg-slate-800/50 rounded-lg p-3 sm:p-4 space-y-3 border border-slate-700/50">
                   {activity.type === 'insider' ? (
                     <>
                       <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
