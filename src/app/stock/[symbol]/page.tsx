@@ -26,7 +26,11 @@ interface StockPageProps {
   searchParams: Promise<{ period?: string }>;
 }
 
-async function getStockData(symbol: string, period: Period): Promise<StockData> {
+interface StockDataWithMeta extends StockData {
+  companyName: string | null;
+}
+
+async function getStockData(symbol: string, period: Period): Promise<StockDataWithMeta> {
   try {
     const days = PERIOD_DAYS[period];
     const startDate = new Date();
@@ -39,6 +43,7 @@ async function getStockData(symbol: string, period: Period): Promise<StockData> 
       interval: '1d',
     });
 
+    const companyName = chartResult.meta?.shortName || chartResult.meta?.longName || null;
     const quotes = chartResult.quotes;
     if (!quotes || quotes.length === 0) throw new Error('No price data');
 
@@ -61,13 +66,13 @@ async function getStockData(symbol: string, period: Period): Promise<StockData> 
 
     if (prices.length === 0) {
       console.log(`No real price data for ${symbol}, returning mock`);
-      return getMockStockData(symbol);
+      return { ...getMockStockData(symbol), companyName };
     }
 
-    return { prices, insiderTransactions, news };
+    return { prices, insiderTransactions, news, companyName };
   } catch (err) {
     console.error('Data fetching error:', err);
-    return getMockStockData(symbol);
+    return { ...getMockStockData(symbol), companyName: null };
   }
 }
 
@@ -91,7 +96,11 @@ export default async function StockPage({ params, searchParams }: StockPageProps
             <div>
               <h1 className="text-lg sm:text-xl font-bold flex items-center gap-1 sm:gap-2">
                 {symbol}
-                <span className="text-slate-500 text-xs sm:text-sm font-normal">종목 분석</span>
+                {data.companyName && (
+                  <span className="text-slate-400 text-xs sm:text-sm font-normal truncate max-w-[150px] sm:max-w-[250px]">
+                    {data.companyName}
+                  </span>
+                )}
               </h1>
             </div>
           </div>
