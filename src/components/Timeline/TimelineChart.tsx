@@ -198,29 +198,42 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       let html = `<div class="text-xs font-bold mb-2">${dateStr}</div>`;
 
+      const groupByPerson = (txns: typeof transactions) => {
+        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number }>();
+        txns.forEach(t => {
+          const existing = grouped.get(t.name);
+          const value = t.share * (t.transactionPrice || 1);
+          if (existing) {
+            existing.totalShares += t.share;
+            existing.totalValue += value;
+          } else {
+            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value });
+          }
+        });
+        return Array.from(grouped.values());
+      };
+
       if (buyTransactions.length > 0) {
+        const groupedBuys = groupByPerson(buyTransactions);
         html += '<div class="mb-2">';
         html += '<div class="text-emerald-400 font-semibold mb-1">매수</div>';
-        buyTransactions.forEach(t => {
-          const value = t.share * (t.transactionPrice || 1);
-          html += `<div class="text-slate-300 text-[10px] leading-relaxed">`;
-          html += `${t.name}<br/>`;
-          html += `${getCodeLabel(t.transactionCode)} · ${Number(t.share).toLocaleString()}주<br/>`;
-          html += `${formatValue(value)}`;
+        groupedBuys.forEach(g => {
+          html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
+          html += `${g.name}<br/>`;
+          html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
           html += `</div>`;
         });
         html += '</div>';
       }
 
       if (sellTransactions.length > 0) {
+        const groupedSells = groupByPerson(sellTransactions);
         html += '<div>';
         html += '<div class="text-red-400 font-semibold mb-1">매도</div>';
-        sellTransactions.forEach(t => {
-          const value = t.share * (t.transactionPrice || 1);
-          html += `<div class="text-slate-300 text-[10px] leading-relaxed">`;
-          html += `${t.name}<br/>`;
-          html += `${getCodeLabel(t.transactionCode)} · ${Number(t.share).toLocaleString()}주<br/>`;
-          html += `${formatValue(value)}`;
+        groupedSells.forEach(g => {
+          html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
+          html += `${g.name}<br/>`;
+          html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
           html += `</div>`;
         });
         html += '</div>';
