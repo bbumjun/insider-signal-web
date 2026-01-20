@@ -1,9 +1,9 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
 import { Star, ChevronRight, X } from 'lucide-react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WatchlistItem {
   symbol: string;
@@ -11,45 +11,48 @@ interface WatchlistItem {
   added_at: string;
 }
 
+async function fetchWatchlist(): Promise<WatchlistItem[]> {
+  const res = await fetch('/api/watchlist');
+  if (!res.ok) throw new Error('Failed to fetch watchlist');
+  const data = await res.json();
+  return data.watchlist || [];
+}
+
 export default function WatchlistSection() {
   const { data: session, status } = useSession();
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchWatchlist();
-    } else {
-      setIsLoading(false);
-    }
-  }, [session?.user]);
+  const { data: watchlist = [], isLoading } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: fetchWatchlist,
+    enabled: !!session?.user,
+  });
 
-  const fetchWatchlist = async () => {
-    try {
-      const res = await fetch('/api/watchlist');
-      if (res.ok) {
-        const data = await res.json();
-        setWatchlist(data.watchlist || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch watchlist:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const removeFromWatchlist = async (symbol: string) => {
-    try {
+  const removeMutation = useMutation({
+    mutationFn: async (symbol: string) => {
       const res = await fetch(`/api/watchlist?symbol=${symbol}`, {
         method: 'DELETE',
       });
-      if (res.ok) {
-        setWatchlist((prev) => prev.filter((item) => item.symbol !== symbol));
+      if (!res.ok) throw new Error('Failed to remove from watchlist');
+      return symbol;
+    },
+    onMutate: async (symbol) => {
+      await queryClient.cancelQueries({ queryKey: ['watchlist'] });
+      const previous = queryClient.getQueryData<WatchlistItem[]>(['watchlist']);
+      queryClient.setQueryData<WatchlistItem[]>(['watchlist'], (old = []) =>
+        old.filter((item) => item.symbol !== symbol)
+      );
+      return { previous };
+    },
+    onError: (_err, _symbol, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['watchlist'], context.previous);
       }
-    } catch (err) {
-      console.error('Failed to remove from watchlist:', err);
-    }
-  };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+    },
+  });
 
   if (status === 'loading' || isLoading) {
     return null;
@@ -98,7 +101,7 @@ export default function WatchlistSection() {
             <button
               onClick={(e) => {
                 e.preventDefault();
-                removeFromWatchlist(item.symbol);
+                removeMutation.mutate(item.symbol);
               }}
               className="ml-1 p-1 rounded-full hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
               title="관심종목에서 제거"

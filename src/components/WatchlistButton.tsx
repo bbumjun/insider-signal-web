@@ -2,65 +2,99 @@
 
 import { useSession } from 'next-auth/react';
 import { Star } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WatchlistButtonProps {
   symbol: string;
   companyName?: string | null;
 }
 
+interface WatchlistItem {
+  symbol: string;
+  company_name: string | null;
+  added_at: string;
+}
+
+async function fetchWatchlist(): Promise<WatchlistItem[]> {
+  const res = await fetch('/api/watchlist');
+  if (!res.ok) throw new Error('Failed to fetch watchlist');
+  const data = await res.json();
+  return data.watchlist || [];
+}
+
 export default function WatchlistButton({ symbol, companyName }: WatchlistButtonProps) {
   const { data: session, status } = useSession();
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const upperSymbol = symbol.toUpperCase();
 
-  const checkWatchlist = useCallback(async () => {
-    if (!session?.user) return;
-    
-    try {
-      const res = await fetch('/api/watchlist');
-      if (res.ok) {
-        const data = await res.json();
-        const found = data.watchlist?.some(
-          (item: { symbol: string }) => item.symbol === symbol.toUpperCase()
-        );
-        setIsInWatchlist(found);
+  const { data: watchlist = [] } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: fetchWatchlist,
+    enabled: !!session?.user,
+  });
+
+  const isInWatchlist = watchlist.some((item) => item.symbol === upperSymbol);
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: upperSymbol, companyName }),
+      });
+      if (!res.ok) throw new Error('Failed to add to watchlist');
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['watchlist'] });
+      const previous = queryClient.getQueryData<WatchlistItem[]>(['watchlist']);
+      queryClient.setQueryData<WatchlistItem[]>(['watchlist'], (old = []) => [
+        { symbol: upperSymbol, company_name: companyName || null, added_at: new Date().toISOString() },
+        ...old,
+      ]);
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['watchlist'], context.previous);
       }
-    } catch (err) {
-      console.error('Failed to check watchlist:', err);
-    }
-  }, [session?.user, symbol]);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+    },
+  });
 
-  useEffect(() => {
-    checkWatchlist();
-  }, [checkWatchlist]);
-
-  const toggleWatchlist = async () => {
-    if (!session?.user) return;
-    
-    setIsLoading(true);
-    try {
-      if (isInWatchlist) {
-        const res = await fetch(`/api/watchlist?symbol=${symbol}`, {
-          method: 'DELETE',
-        });
-        if (res.ok) {
-          setIsInWatchlist(false);
-        }
-      } else {
-        const res = await fetch('/api/watchlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symbol, companyName }),
-        });
-        if (res.ok) {
-          setIsInWatchlist(true);
-        }
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/watchlist?symbol=${upperSymbol}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to remove from watchlist');
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['watchlist'] });
+      const previous = queryClient.getQueryData<WatchlistItem[]>(['watchlist']);
+      queryClient.setQueryData<WatchlistItem[]>(['watchlist'], (old = []) =>
+        old.filter((item) => item.symbol !== upperSymbol)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['watchlist'], context.previous);
       }
-    } catch (err) {
-      console.error('Failed to toggle watchlist:', err);
-    } finally {
-      setIsLoading(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+    },
+  });
+
+  const isLoading = addMutation.isPending || removeMutation.isPending;
+
+  const handleClick = () => {
+    if (isInWatchlist) {
+      removeMutation.mutate();
+    } else {
+      addMutation.mutate();
     }
   };
 
@@ -86,7 +120,7 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
 
   return (
     <button
-      onClick={toggleWatchlist}
+      onClick={handleClick}
       disabled={isLoading}
       className={`p-2 rounded-lg transition-all ${
         isInWatchlist
