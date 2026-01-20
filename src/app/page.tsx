@@ -80,24 +80,7 @@ function ChartBackground() {
           </circle>
         </g>
         
-        <g className="opacity-70">
-          {[150, 350, 550, 750, 950, 1150].map((x, i) => {
-            const heights = [50, 80, 35, 95, 60, 45];
-            const colors = ['#10b981', '#ef4444', '#10b981', '#10b981', '#ef4444', '#10b981'];
-            return (
-              <rect 
-                key={x} 
-                x={x} 
-                y={320 - heights[i]} 
-                width="30" 
-                height={heights[i]} 
-                fill={colors[i]}
-                opacity={0.6}
-                rx="2"
-              />
-            );
-          })}
-        </g>
+
       </svg>
       
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90 z-10" />
