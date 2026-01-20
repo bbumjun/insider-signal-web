@@ -67,7 +67,7 @@ export default function StockClientWrapper({ symbol, fullData }: StockClientWrap
         <div className="lg:col-span-7 flex flex-col">
           <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">AI 인사이트</h3>
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl flex-1 min-h-[350px] sm:min-h-[400px]">
-            <InsightPanel symbol={symbol} data={filteredData} />
+            <InsightPanel symbol={symbol} data={fullData} />
           </div>
         </div>
       </div>

@@ -115,8 +115,11 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fetchedSymbol, setFetchedSymbol] = useState<string | null>(null);
 
   useEffect(() => {
+    if (fetchedSymbol === symbol) return;
+
     const fetchInsight = async () => {
       setLoading(true);
       setError(null);
@@ -129,6 +132,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
         const result = await response.json();
         if (result.error) throw new Error(result.error);
         setInsight(result.insight);
+        setFetchedSymbol(symbol);
       } catch (err) {
         console.error('AI Insight Error:', err);
         setError('Failed to generate AI analysis. Please try again later.');
@@ -138,7 +142,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
     };
 
     fetchInsight();
-  }, [symbol, data]);
+  }, [symbol, data, fetchedSymbol]);
 
   return (
     <div className="h-full flex flex-col">
