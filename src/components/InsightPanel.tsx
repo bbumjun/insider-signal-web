@@ -34,49 +34,98 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
 
   const clampedValue = Math.max(1, Math.min(5, value));
   const percentage = ((clampedValue - 1) / 4) * 100;
-  const rotation = animated ? (percentage / 100) * 180 - 90 : -90;
+  const animatedPercentage = animated ? percentage : 0;
   
   const isBuy = type === 'buy';
-  const gradientColors = isBuy 
-    ? 'from-emerald-500 to-emerald-400' 
-    : 'from-red-500 to-amber-500';
-  const accentColor = isBuy ? 'bg-emerald-500' : 'bg-red-500';
+  const label = isBuy ? '매수' : '매도';
+  const subLabel = isBuy ? 'BUY SIGNAL' : 'SELL SIGNAL';
+  
+  const gradientId = `gradient-${type}`;
+  const glowColor = isBuy ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+  const strokeColor = isBuy ? 'url(#gradient-buy)' : 'url(#gradient-sell)';
   const textColor = isBuy ? 'text-emerald-400' : 'text-red-400';
-  const label = isBuy ? '매수 시그널' : '매도 시그널';
-  const Icon = isBuy ? TrendingUp : TrendingDown;
+  const bgGlow = isBuy ? 'shadow-emerald-500/20' : 'shadow-red-500/20';
+
+  const size = 100;
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * Math.PI;
+  const strokeDashoffset = circumference - (animatedPercentage / 100) * circumference;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-24 h-14 sm:w-32 sm:h-[68px]">
-        <div className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 overflow-hidden">
-          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[6px] sm:border-8 border-slate-700/50" />
-        </div>
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-12 sm:h-16 overflow-hidden"
-          style={{
-            clipPath: `polygon(0 100%, 0 0, ${percentage}% 0, ${percentage}% 100%)`,
-          }}
+      <div className={`relative w-[100px] h-[58px] sm:w-[120px] sm:h-[68px]`}>
+        <svg 
+          width="100%" 
+          height="100%" 
+          viewBox={`0 0 ${size} ${size / 2 + strokeWidth}`}
+          className="overflow-visible"
         >
-          <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[6px] sm:border-8 border-transparent bg-gradient-to-r ${gradientColors} [mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)] [mask-composite:exclude]`} 
-            style={{ padding: '6px' }}
+          <defs>
+            <linearGradient id="gradient-buy" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+            <linearGradient id="gradient-sell" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+            <filter id={`glow-${type}`} x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <path
+            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            fill="none"
+            stroke="#1e293b"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
           />
+          <path
+            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            filter={`url(#glow-${type})`}
+            className="transition-all duration-1000 ease-out"
+            style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
+          />
+          {[0, 1, 2, 3, 4].map((tick) => {
+            const angle = Math.PI - (tick / 4) * Math.PI;
+            const innerRadius = radius - strokeWidth/2 - 4;
+            const x = size/2 + innerRadius * Math.cos(angle);
+            const y = size/2 - innerRadius * Math.sin(angle);
+            return (
+              <circle
+                key={tick}
+                cx={x}
+                cy={y}
+                r={1.5}
+                fill={tick < clampedValue ? (isBuy ? '#10b981' : '#ef4444') : '#334155'}
+                className="transition-colors duration-500"
+              />
+            );
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
+          <span className={`text-2xl sm:text-3xl font-bold ${textColor} leading-none`}>
+            {clampedValue}
+          </span>
+          <span className="text-[8px] sm:text-[9px] text-slate-500 tracking-wider mt-0.5">
+            / 5
+          </span>
         </div>
-        <div 
-          className="absolute bottom-0 left-1/2 origin-bottom transition-transform duration-1000 ease-out"
-          style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
-        >
-          <div className="flex flex-col items-center">
-            <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${accentColor} shadow-lg`} />
-            <div className={`w-0.5 h-8 sm:h-11 ${accentColor} opacity-60`} />
-          </div>
-        </div>
-        <div className="absolute -bottom-1 left-0 text-[10px] text-slate-500">1</div>
-        <div className="absolute -bottom-1 right-0 text-[10px] text-slate-500">5</div>
       </div>
-      <div className={`mt-1 text-xl sm:text-2xl font-bold ${textColor}`}>{clampedValue}</div>
-      <div className="flex items-center gap-1 text-xs text-slate-400">
-        <Icon className="w-3 h-3" />
-        <span>{label}</span>
+      <div className="mt-2 text-center">
+        <div className={`text-xs sm:text-sm font-semibold ${textColor}`}>{label}</div>
+        <div className="text-[9px] sm:text-[10px] text-slate-500 tracking-widest">{subLabel}</div>
       </div>
     </div>
   );
@@ -84,12 +133,13 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
 
 function SignalGaugeSection({ signalData }: { signalData: SignalData }) {
   return (
-    <div className="space-y-1.5 sm:space-y-2">
+    <div className="space-y-3 sm:space-y-4">
       <h3 className="text-sm sm:text-base font-bold text-cyan-400 flex items-center gap-2">
         📈 시그널 강도
       </h3>
-      <div className="flex justify-center gap-6 sm:gap-10 py-3 sm:py-4 px-2 bg-slate-800/30 rounded-lg">
+      <div className="flex justify-center items-center gap-8 sm:gap-16 py-4 sm:py-6 px-4 bg-gradient-to-b from-slate-800/40 to-slate-900/40 rounded-xl border border-slate-700/30">
         <SignalGauge value={signalData.buy} type="buy" />
+        <div className="w-px h-20 bg-gradient-to-b from-transparent via-slate-600 to-transparent" />
         <SignalGauge value={signalData.sell} type="sell" />
       </div>
     </div>
