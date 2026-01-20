@@ -1,5 +1,7 @@
 import SearchBar from '@/components/SearchBar';
 import { TrendingUp, Activity, Award } from 'lucide-react';
+import AuthButton from '@/components/AuthButton';
+import WatchlistSection from '@/components/WatchlistSection';
 
 function ChartBackground() {
   return (
@@ -93,7 +95,16 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white selection:bg-emerald-500/30 relative overflow-hidden">
       <ChartBackground />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-12 sm:pb-20 relative z-20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md border-b border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+            Insider Signal
+          </div>
+          <AuthButton />
+        </div>
+      </header>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 sm:pt-40 pb-12 sm:pb-20 relative z-20">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold mb-6 uppercase tracking-wider backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
@@ -115,6 +126,8 @@ export default function Home() {
         </div>
 
         <SearchBar />
+
+        <WatchlistSection />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-32">
           <FeatureCard 
