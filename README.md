@@ -8,18 +8,6 @@
 
 ---
 
-## 📸 스크린샷
-
-### 메인 대시보드
-![Dashboard](https://via.placeholder.com/800x450?text=Dashboard+Screenshot)
-
-### AI 분석 리포트
-![AI Analysis](https://via.placeholder.com/800x450?text=AI+Analysis+Screenshot)
-
-> 실제 스크린샷으로 교체 예정
-
----
-
 ## ✨ 핵심 기능
 
 ### 📊 통합 차트 뷰
@@ -230,7 +218,7 @@ MIT License - 자유롭게 사용, 수정, 배포할 수 있습니다.
 ### 기여 아이디어
 
 - [ ] 다크/라이트 모드 토글
-- [ ] 관심 종목 저장 기능
+- [x] 관심 종목 저장 기능
 - [ ] 알림 기능 (특정 패턴 감지 시)
 - [ ] 한국 주식 지원 (KRX)
 - [ ] 모바일 반응형 개선
