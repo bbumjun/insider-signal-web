@@ -2,6 +2,7 @@ import SearchBar from '@/components/SearchBar';
 import { TrendingUp, Activity, Award } from 'lucide-react';
 import AuthButton from '@/components/AuthButton';
 import WatchlistSection from '@/components/WatchlistSection';
+import Logo from '@/components/Logo';
 
 function ChartBackground() {
   return (
@@ -97,9 +98,7 @@ export default function Home() {
       
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-md border-b border-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-            Insider Signal
-          </div>
+          <Logo />
           <AuthButton />
         </div>
       </header>
