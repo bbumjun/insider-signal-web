@@ -48,13 +48,13 @@ export default function ShareButton({ symbol }: ShareButtonProps) {
   return (
     <button
       onClick={handleShare}
-      className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white relative"
+      className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white relative"
       aria-label="공유하기"
     >
       {copied ? (
-        <Check className="w-5 h-5 text-emerald-400" />
+        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
       ) : (
-        <Share2 className="w-5 h-5" />
+        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
       )}
       {copied && (
         <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs bg-slate-800 text-emerald-400 px-2 py-1 rounded shadow-lg">

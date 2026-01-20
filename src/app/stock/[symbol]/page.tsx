@@ -68,23 +68,23 @@ export default async function StockPage({ params }: StockPageProps) {
     <main className="min-h-screen bg-black text-white selection:bg-emerald-500/30">
       <header className="border-b border-slate-800 bg-black/50 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-              <ChevronLeft className="w-5 h-5" />
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <Link href="/" className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors flex-shrink-0">
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
-            <div className="h-6 w-px bg-slate-800" />
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-1 sm:gap-2">
-                {symbol}
+            <div className="h-5 sm:h-6 w-px bg-slate-800 flex-shrink-0 hidden sm:block" />
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold flex items-center gap-1 sm:gap-2">
+                <span className="flex-shrink-0">{symbol}</span>
                 {data.companyName && (
-                  <span className="text-slate-400 text-xs sm:text-sm font-normal truncate max-w-[150px] sm:max-w-[250px]">
+                  <span className="text-slate-400 text-xs sm:text-sm font-normal truncate max-w-[100px] sm:max-w-[250px]">
                     {data.companyName}
                   </span>
                 )}
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
             <div className="hidden sm:block">
               <SearchBar compact />
             </div>

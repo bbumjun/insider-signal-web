@@ -100,8 +100,8 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
 
   if (status === 'loading') {
     return (
-      <button className="p-2 rounded-lg text-slate-600" disabled>
-        <Star className="w-5 h-5" />
+      <button className="p-1.5 sm:p-2 rounded-lg text-slate-600" disabled>
+        <Star className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     );
   }
@@ -109,11 +109,11 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
   if (!session) {
     return (
       <button
-        className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400"
+        className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400"
         title="로그인 후 관심종목에 추가할 수 있습니다"
         disabled
       >
-        <Star className="w-5 h-5" />
+        <Star className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
     );
   }
@@ -122,14 +122,14 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
     <button
       onClick={handleClick}
       disabled={isLoading}
-      className={`p-2 rounded-lg transition-all ${
+      className={`p-1.5 sm:p-2 rounded-lg transition-all ${
         isInWatchlist
           ? 'text-yellow-400 hover:bg-yellow-400/10'
           : 'text-slate-400 hover:bg-slate-800 hover:text-yellow-400'
       } ${isLoading ? 'opacity-50' : ''}`}
       title={isInWatchlist ? '관심종목에서 제거' : '관심종목에 추가'}
     >
-      <Star className={`w-5 h-5 ${isInWatchlist ? 'fill-current' : ''}`} />
+      <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${isInWatchlist ? 'fill-current' : ''}`} />
     </button>
   );
 }
