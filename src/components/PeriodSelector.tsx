@@ -1,62 +1,36 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useTransition, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+type Period = '1M' | '3M' | '1Y';
 
-const PERIODS = ['1M', '3M', '1Y'] as const;
+const PERIODS: Period[] = ['1M', '3M', '1Y'];
 
-const PERIOD_LABELS: Record<string, string> = {
+const PERIOD_LABELS: Record<Period, string> = {
   '1M': '1개월',
   '3M': '3개월',
   '1Y': '1년',
 };
 
 interface PeriodSelectorProps {
-  currentPeriod: string;
+  currentPeriod: Period;
+  onPeriodChange: (period: Period) => void;
 }
 
-export default function PeriodSelector({ currentPeriod }: PeriodSelectorProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [pendingPeriod, setPendingPeriod] = useState<string | null>(null);
-
-  const handlePeriodChange = (period: string) => {
-    if (period === currentPeriod || isPending) return;
-    
-    setPendingPeriod(period);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('period', period);
-    
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  };
-
+export default function PeriodSelector({ currentPeriod, onPeriodChange }: PeriodSelectorProps) {
   return (
     <div className="flex gap-1.5 sm:gap-2">
       {PERIODS.map((p) => {
-        const isLoading = isPending && pendingPeriod === p;
-        const isActive = currentPeriod === p && !isPending;
-        const isDisabled = isPending && pendingPeriod !== p;
+        const isActive = currentPeriod === p;
         
         return (
           <button
             key={p}
-            onClick={() => handlePeriodChange(p)}
-            disabled={isPending}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs font-bold rounded-lg transition-all border flex items-center gap-1 sm:gap-1.5 ${
-              isLoading
-                ? 'bg-emerald-500/30 border-emerald-500/50 text-emerald-400'
-                : isActive
+            onClick={() => onPeriodChange(p)}
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs font-bold rounded-lg transition-all border ${
+              isActive
                 ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                : isDisabled
-                ? 'bg-slate-800/50 border-slate-700/50 text-slate-600 cursor-not-allowed'
                 : 'bg-slate-800 border-slate-700 hover:bg-slate-700 cursor-pointer'
             }`}
           >
-            {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
             {PERIOD_LABELS[p]}
           </button>
         );
