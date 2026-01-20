@@ -38,15 +38,28 @@ export async function POST(
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
 
-    await supabase.from('ai_insights').insert({
+    const { error: insertError } = await supabase.from('ai_insights').insert({
       symbol: symbol.toUpperCase(),
       content: insight,
       expires_at: tomorrow.toISOString(),
     });
 
+    if (insertError) {
+      console.error('[Supabase Insert Error]', insertError);
+    }
+
     return NextResponse.json({ insight });
   } catch (error) {
-    console.error('Analysis error:', error);
-    return NextResponse.json({ error: 'Failed to generate analysis' }, { status: 500 });
+    const err = error as Error;
+    console.error('[Analysis Error]', {
+      symbol,
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+    });
+    return NextResponse.json({ 
+      error: 'Failed to generate analysis',
+      details: err.message 
+    }, { status: 500 });
   }
 }
