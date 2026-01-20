@@ -142,9 +142,6 @@ export async function generateAnalysis(symbol: string, data: StockData) {
     • [발견 2]
     • [발견 3]
     
-    ⚠️ 주의사항
-    • [실제 리스크만 언급, 일반적 매도는 리스크 아님]
-    
     💡 투자 관점
     • 단기(1-4주): [구체적 액션]
     • 트리거: [조건부 액션]
