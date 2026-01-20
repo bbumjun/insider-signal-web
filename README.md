@@ -42,6 +42,11 @@
 - 타임라인에서 "강력 시그널" 배지 표시
 - AI 분석에서 최우선 언급
 
+### 🔐 Google 로그인 & 관심종목
+- Google OAuth 로그인 지원
+- 관심종목 추가/삭제 (Optimistic Update)
+- 홈페이지에서 관심종목 바로가기
+
 ---
 
 ## 📖 내부자 거래 해석 가이드
@@ -128,9 +133,11 @@ insider-signal-web/
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS |
 | **Charts** | Lightweight Charts |
+| **State** | TanStack Query (React Query) |
+| **Auth** | NextAuth.js (Google OAuth) |
 | **Icons** | Lucide React |
 | **AI** | Google Gemini 2.5 Flash Lite |
-| **Cache** | Supabase |
+| **Database** | Supabase |
 | **Data** | Yahoo Finance, Finnhub API |
 | **Deploy** | Vercel |
 
@@ -145,9 +152,14 @@ GEMINI_API_KEY=your_gemini_api_key
 # Data APIs
 FINNHUB_API_KEY=your_finnhub_api_key
 
-# Cache (Supabase)
+# Database (Supabase)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+# Auth (Google OAuth)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+AUTH_SECRET=your_auth_secret  # openssl rand -base64 32
 ```
 
 ---
@@ -221,7 +233,7 @@ MIT License - 자유롭게 사용, 수정, 배포할 수 있습니다.
 - [x] 관심 종목 저장 기능
 - [ ] 알림 기능 (특정 패턴 감지 시)
 - [ ] 한국 주식 지원 (KRX)
-- [ ] 모바일 반응형 개선
+- [x] 모바일 반응형 개선
 
 ---
 
