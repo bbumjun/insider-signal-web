@@ -6,6 +6,7 @@ import { StockData } from '@/types';
 import YahooFinance from 'yahoo-finance2';
 import ShareButton from '@/components/ShareButton';
 import StockClientWrapper from '@/components/StockClientWrapper';
+import SearchBar from '@/components/SearchBar';
 
 const yahooFinance = new YahooFinance();
 
@@ -81,7 +82,10 @@ export default async function StockPage({ params }: StockPageProps) {
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:block">
+              <SearchBar compact />
+            </div>
             <ShareButton symbol={symbol} />
             <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
               <Star className="w-5 h-5" />

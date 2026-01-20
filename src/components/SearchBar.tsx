@@ -41,7 +41,11 @@ function removeRecentSearch(symbol: string) {
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
 }
 
-export default function SearchBar() {
+interface SearchBarProps {
+  compact?: boolean;
+}
+
+export default function SearchBar({ compact = false }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -184,7 +188,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xl mx-auto">
+    <div ref={containerRef} className={`relative ${compact ? 'w-full max-w-xs' : 'w-full max-w-xl mx-auto'}`}>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -192,22 +196,24 @@ export default function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          placeholder="종목 코드 입력 (예: AAPL, NVDA)..."
-          className="w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-20 sm:pr-24 rounded-xl sm:rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-sm sm:text-base"
+          placeholder={compact ? "종목 검색..." : "종목 코드 입력 (예: AAPL, NVDA)..."}
+          className={`w-full ${compact ? 'h-9 pl-8 pr-3 rounded-lg text-sm' : 'h-12 sm:h-14 pl-10 sm:pl-12 pr-20 sm:pr-24 rounded-xl sm:rounded-2xl text-sm sm:text-base'} bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
         />
         {isLoading ? (
-          <Loader2 className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
+          <Loader2 className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500 animate-spin`} />
         ) : (
-          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 sm:w-5 h-4 sm:h-5" />
+          <Search className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500`} />
         )}
-        <button
-          type="submit"
-          disabled={isNavigating}
-          className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base flex items-center gap-2"
-        >
-          {isNavigating && <Loader2 className="w-4 h-4 animate-spin" />}
-          분석
-        </button>
+        {!compact && (
+          <button
+            type="submit"
+            disabled={isNavigating}
+            className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 text-white rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base flex items-center gap-2"
+          >
+            {isNavigating && <Loader2 className="w-4 h-4 animate-spin" />}
+            분석
+          </button>
+        )}
       </form>
 
       {showRecent && recentSearches.length > 0 && (
