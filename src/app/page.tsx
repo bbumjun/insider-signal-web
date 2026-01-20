@@ -4,90 +4,103 @@ import { TrendingUp, Activity, Award } from 'lucide-react';
 function ChartBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black z-10" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.15),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(6,182,212,0.1),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.2),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(6,182,212,0.15),transparent_60%)]" />
       
       <svg 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 w-[1400px] h-[600px] opacity-30"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/4 w-[1600px] h-[700px] opacity-70"
         viewBox="0 0 1400 400"
         preserveAspectRatio="none"
       >
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.5" />
             <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0" />
-            <stop offset="20%" stopColor="#10b981" stopOpacity="1" />
-            <stop offset="80%" stopColor="#06b6d4" stopOpacity="1" />
-            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+            <stop offset="30%" stopColor="#10b981" stopOpacity="1" />
+            <stop offset="70%" stopColor="#06b6d4" stopOpacity="1" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
           </linearGradient>
           <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
             <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <filter id="glowStrong">
+            <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
         </defs>
         
+        <g className="opacity-40">
+          {[200, 400, 600, 800, 1000, 1200].map((x) => (
+            <line key={x} x1={x} y1="20" x2={x} y2="380" stroke="#334155" strokeWidth="1" />
+          ))}
+          {[80, 140, 200, 260, 320].map((y) => (
+            <line key={y} x1="50" y1={y} x2="1350" y2={y} stroke="#334155" strokeWidth="1" />
+          ))}
+        </g>
+        
         <path
-          d="M0,300 Q100,280 200,250 T400,200 T600,180 T800,120 T1000,140 T1200,80 T1400,100"
+          d="M0,320 C100,300 150,280 250,250 S400,200 500,190 S650,160 750,120 S900,100 1000,130 S1150,90 1250,70 S1350,80 1400,90"
           fill="none"
           stroke="url(#lineGradient)"
-          strokeWidth="3"
-          filter="url(#glow)"
-          className="animate-pulse"
-          style={{ animationDuration: '4s' }}
+          strokeWidth="4"
+          filter="url(#glowStrong)"
         />
         
         <path
-          d="M0,300 Q100,280 200,250 T400,200 T600,180 T800,120 T1000,140 T1200,80 T1400,100 L1400,400 L0,400 Z"
+          d="M0,320 C100,300 150,280 250,250 S400,200 500,190 S650,160 750,120 S900,100 1000,130 S1150,90 1250,70 S1350,80 1400,90 L1400,400 L0,400 Z"
           fill="url(#chartGradient)"
         />
         
-        <g className="opacity-60">
-          {[200, 400, 600, 800, 1000, 1200].map((x) => (
-            <line key={x} x1={x} y1="50" x2={x} y2="350" stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" />
-          ))}
-          {[100, 150, 200, 250, 300].map((y) => (
-            <line key={y} x1="100" y1={y} x2="1300" y2={y} stroke="#1e293b" strokeWidth="1" strokeDasharray="4,4" />
-          ))}
-        </g>
-        
         <g>
-          <circle cx="400" cy="200" r="6" fill="#10b981" filter="url(#glow)">
-            <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+          <circle cx="250" cy="250" r="8" fill="#10b981" filter="url(#glowStrong)">
+            <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite" />
           </circle>
-          <circle cx="800" cy="120" r="6" fill="#fbbf24" filter="url(#glow)">
-            <animate attributeName="r" values="4;8;4" dur="2.5s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="1;0.5;1" dur="2.5s" repeatCount="indefinite" />
+          <circle cx="500" cy="190" r="8" fill="#10b981" filter="url(#glowStrong)">
+            <animate attributeName="r" values="6;10;6" dur="2.3s" repeatCount="indefinite" />
           </circle>
-          <circle cx="1000" cy="140" r="6" fill="#ef4444" filter="url(#glow)">
-            <animate attributeName="r" values="4;8;4" dur="3s" repeatCount="indefinite" />
-            <animate attributeName="opacity" values="1;0.5;1" dur="3s" repeatCount="indefinite" />
+          <circle cx="750" cy="120" r="10" fill="#fbbf24" filter="url(#glowStrong)">
+            <animate attributeName="r" values="8;14;8" dur="2.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="1000" cy="130" r="8" fill="#ef4444" filter="url(#glowStrong)">
+            <animate attributeName="r" values="6;10;6" dur="2.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="1250" cy="70" r="8" fill="#10b981" filter="url(#glowStrong)">
+            <animate attributeName="r" values="6;10;6" dur="3s" repeatCount="indefinite" />
           </circle>
         </g>
         
-        <g className="opacity-40">
-          {[300, 500, 700, 900, 1100].map((x, i) => (
-            <rect 
-              key={x} 
-              x={x} 
-              y={280 - (i % 2 === 0 ? 40 : 60)} 
-              width="20" 
-              height={i % 2 === 0 ? 40 : 60} 
-              fill={i % 3 === 0 ? '#10b981' : '#ef4444'} 
-              rx="2"
-            />
-          ))}
+        <g className="opacity-70">
+          {[150, 350, 550, 750, 950, 1150].map((x, i) => {
+            const heights = [50, 80, 35, 95, 60, 45];
+            const colors = ['#10b981', '#ef4444', '#10b981', '#10b981', '#ef4444', '#10b981'];
+            return (
+              <rect 
+                key={x} 
+                x={x} 
+                y={320 - heights[i]} 
+                width="30" 
+                height={heights[i]} 
+                fill={colors[i]}
+                opacity={0.6}
+                rx="2"
+              />
+            );
+          })}
         </g>
       </svg>
       
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90 z-10" />
     </div>
   );
 }
