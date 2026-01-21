@@ -16,10 +16,11 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const { buyData, sellData, totalBuy, totalSell, transactionsByDate } = useMemo(() => {
+  const { buyData, sellData, totalBuy, totalSell, transactionsByDate, newsByDate } = useMemo(() => {
     const buyMap = new Map<string, number>();
     const sellMap = new Map<string, number>();
     const transactionsByDate = new Map<string, InsiderTransaction[]>();
+    const newsByDate = new Map<string, CompanyNews[]>();
     let totalBuy = 0;
     let totalSell = 0;
 
@@ -44,6 +45,15 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       }
     });
 
+    news.forEach(n => {
+      const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
+      if (!date) return;
+      if (!newsByDate.has(date)) {
+        newsByDate.set(date, []);
+      }
+      newsByDate.get(date)!.push(n);
+    });
+
     const buyData = Array.from(buyMap.entries())
       .map(([time, value]) => ({ time, value, color: '#10b981' }))
       .sort((a, b) => a.time.localeCompare(b.time));
@@ -52,8 +62,8 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       .map(([time, value]) => ({ time, value: -value, color: '#ef4444' }))
       .sort((a, b) => a.time.localeCompare(b.time));
 
-    return { buyData, sellData, totalBuy, totalSell, transactionsByDate };
-  }, [insiderTransactions]);
+    return { buyData, sellData, totalBuy, totalSell, transactionsByDate, newsByDate };
+  }, [insiderTransactions, news]);
 
   useEffect(() => {
     if (!chartContainerRef.current || !prices.length) return;
@@ -157,18 +167,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       }
     });
 
-    if (period === '1M') {
-      const seenNews = new Set<string>();
-      news.forEach(n => {
-        const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
-        if (!date || seenNews.has(date)) return;
-        seenNews.add(date);
-        const priceAtDate = prices.find(p => p.date === date)?.close;
-        if (priceAtDate) {
-          markers.push({ time: date, position: 'inBar', color: '#3b82f6', shape: 'circle', text: '' });
-        }
-      });
-    }
+    const seenNews = new Set<string>();
+    news.forEach(n => {
+      const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
+      if (!date || seenNews.has(date)) return;
+      seenNews.add(date);
+      const priceAtDate = prices.find(p => p.date === date)?.close;
+      if (priceAtDate) {
+        markers.push({ time: date, position: 'inBar', color: '#3b82f6', shape: 'circle', text: '' });
+      }
+    });
 
     const seriesMarkers = createSeriesMarkers(areaSeries);
     seriesMarkers.setMarkers(markers.sort((a, b) => (a.time > b.time ? 1 : -1)));
@@ -188,13 +196,15 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       if (!tooltipRef.current || !chartContainerRef.current) return;
 
       const transactions = transactionsByDate.get(dateStr);
-      if (!transactions || transactions.length === 0) {
+      const newsItems = newsByDate.get(dateStr);
+      
+      if ((!transactions || transactions.length === 0) && (!newsItems || newsItems.length === 0)) {
         if (!tooltipLocked) hideTooltip();
         return;
       }
 
-      const buyTransactions = transactions.filter(t => ['P', 'A', 'M'].includes(t.transactionCode));
-      const sellTransactions = transactions.filter(t => t.transactionCode === 'S');
+      const buyTransactions = transactions?.filter(t => ['P', 'A', 'M'].includes(t.transactionCode)) || [];
+      const sellTransactions = transactions?.filter(t => t.transactionCode === 'S') || [];
 
       const formatValue = (v: number) => {
         if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
@@ -220,7 +230,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       }
       html += `</div>`;
 
-      const groupByPerson = (txns: typeof transactions) => {
+      const groupByPerson = (txns: InsiderTransaction[]) => {
         const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string> }>();
         txns.forEach(t => {
           const existing = grouped.get(t.name);
@@ -263,7 +273,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       if (sellTransactions.length > 0) {
         const groupedSells = groupByPerson(sellTransactions);
-        html += '<div>';
+        html += '<div class="mb-2">';
         html += '<div class="text-red-400 font-semibold mb-1">매도</div>';
         groupedSells.forEach(g => {
           html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
@@ -275,8 +285,26 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         html += '</div>';
       }
 
+      if (newsItems && newsItems.length > 0) {
+        html += '<div>';
+        html += '<div class="text-blue-400 font-semibold mb-1">📰 뉴스</div>';
+        const displayNews = newsItems.slice(0, 3);
+        displayNews.forEach(n => {
+          const title = n.headline || n.title || '';
+          const truncatedTitle = title.length > 50 ? title.slice(0, 50) + '...' : title;
+          html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
+          html += `${truncatedTitle}`;
+          html += `</div>`;
+        });
+        if (newsItems.length > 3) {
+          html += `<div class="text-slate-500 text-[10px]">+${newsItems.length - 3}개 더보기</div>`;
+        }
+        html += '</div>';
+      }
+
       tooltipRef.current.innerHTML = html;
       tooltipRef.current.style.display = 'block';
+      tooltipRef.current.style.pointerEvents = isTouchDevice ? 'auto' : 'none';
       if (isTouchDevice) tooltipLocked = true;
 
       const closeBtn = tooltipRef.current.querySelector('.tooltip-close');
@@ -341,7 +369,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       }
       chart.remove();
     };
-  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, period]);
+  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, newsByDate, period]);
 
   if (!prices || prices.length === 0) {
     return (
