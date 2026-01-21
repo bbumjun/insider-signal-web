@@ -85,11 +85,20 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
     const authHeader = request.headers.get('authorization');
-    const expectedToken = process.env.CRON_SECRET;
+    const secretParam = searchParams.get('secret');
+    const cronSecret = process.env.CRON_SECRET;
     
-    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (cronSecret) {
+      const isValidAuth = authHeader === `Bearer ${cronSecret}` || secretParam === cronSecret;
+      if (!isValidAuth) {
+        console.error('[Auth Failed]', { 
+          hasAuthHeader: !!authHeader, 
+          hasSecretParam: !!secretParam 
+        });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     console.log('[Insider Screener] Starting scrape...');
