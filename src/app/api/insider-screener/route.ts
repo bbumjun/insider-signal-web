@@ -50,10 +50,12 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
       if (!row.includes('P - Purchase')) continue;
       
       const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+      const rawCells: string[] = [];
       const cells: string[] = [];
       let match;
       
       while ((match = cellRegex.exec(row)) !== null) {
+        rawCells.push(match[1]);
         const cellContent = match[1]
           .replace(/<[^>]*>/g, '')
           .replace(/&nbsp;/g, ' ')
@@ -64,12 +66,11 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
       
       if (cells.length < 13) continue;
       
-      // HTML 구조: [0]X, [1]Filing Date, [2]Trade Date, [3]Ticker, [4]Company, [5]Insider, [6]Title, [7]Type, [8]Price, [9]Qty, [10]Owned, [11]ΔOwn, [12]Value
       const transactionDate = cells[2];
       
-      // 티커: href="/SYMBOL" 패턴에서 추출
-      const tickerMatch = cells[3].match(/href="\/([A-Z]+)"/);
-      const symbol = tickerMatch ? tickerMatch[1] : cells[3].replace(/[^A-Z]/g, '');
+      // 티커: 원본 HTML에서 href="/SYMBOL" 패턴으로 추출
+      const tickerMatch = rawCells[3]?.match(/href="\/([A-Z]+)"/);
+      const symbol = tickerMatch ? tickerMatch[1] : cells[3];
       
       const companyName = cells[4];
       const insiderName = cells[5];
