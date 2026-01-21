@@ -11,9 +11,9 @@ function ChartBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(6,182,212,0.15),transparent_60%)]" />
       
       <svg 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/4 w-[1600px] h-[700px] opacity-70"
+        className="absolute top-1/2 left-0 right-0 -translate-y-1/4 w-full h-[50vh] min-h-[400px] max-h-[700px] opacity-70"
         viewBox="0 0 1400 400"
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid slice"
       >
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
