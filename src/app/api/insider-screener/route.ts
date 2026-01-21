@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 interface InsiderTrade {
   symbol: string;
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
     const trades = await scrapeOpenInsider();
     console.log(`[Insider Screener] Found ${trades.length} trades`);
 
-    const supabase = createServerSupabaseClient();
+    const supabase = createServiceRoleClient();
     
     const { error: deleteError } = await supabase
       .from('insider_screener')
