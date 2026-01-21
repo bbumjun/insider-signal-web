@@ -47,6 +47,7 @@ export default function StockClientWrapper({ symbol, fullData }: StockClientWrap
         </div>
         <div className="h-[300px] sm:h-[350px] lg:h-[400px] w-full">
           <TimelineChart 
+            key={period}
             symbol={symbol} 
             prices={filteredData.prices} 
             insiderTransactions={filteredData.insiderTransactions} 
