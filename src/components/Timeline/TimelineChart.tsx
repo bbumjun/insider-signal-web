@@ -290,7 +290,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         html += '<div class="text-blue-400 font-semibold mb-1">📰 뉴스</div>';
         const displayNews = newsItems.slice(0, 3);
         displayNews.forEach(n => {
-          const title = n.headline || n.title || '';
+          const title = n.headline || '';
           const truncatedTitle = title.length > 50 ? title.slice(0, 50) + '...' : title;
           html += `<div class="text-slate-300 text-[10px] leading-relaxed mb-1">`;
           html += `${truncatedTitle}`;
