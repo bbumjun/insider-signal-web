@@ -85,11 +85,10 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
     const authHeader = request.headers.get('authorization');
-    const expectedToken = process.env.CRON_SECRET || 'default-secret';
+    const expectedToken = process.env.CRON_SECRET;
     
-    if (authHeader !== `Bearer ${expectedToken}`) {
+    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
