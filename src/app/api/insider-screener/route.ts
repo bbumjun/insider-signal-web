@@ -67,9 +67,9 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
       // HTML 구조: [0]X, [1]Filing Date, [2]Trade Date, [3]Ticker, [4]Company, [5]Insider, [6]Title, [7]Type, [8]Price, [9]Qty, [10]Owned, [11]ΔOwn, [12]Value
       const transactionDate = cells[2];
       
-      // 티커에서 링크 텍스트만 추출 (예: "RCG" from "<a href="/RCG">RCG</a>")
-      const tickerMatch = cells[3].match(/([A-Z]+)/);
-      const symbol = tickerMatch ? tickerMatch[1] : cells[3];
+      // 티커: href="/SYMBOL" 패턴에서 추출
+      const tickerMatch = cells[3].match(/href="\/([A-Z]+)"/);
+      const symbol = tickerMatch ? tickerMatch[1] : cells[3].replace(/[^A-Z]/g, '');
       
       const companyName = cells[4];
       const insiderName = cells[5];
