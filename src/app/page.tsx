@@ -2,6 +2,7 @@ import SearchBar from '@/components/SearchBar';
 import { TrendingUp, Activity, Award } from 'lucide-react';
 import AuthButton from '@/components/AuthButton';
 import WatchlistSection from '@/components/WatchlistSection';
+import InsiderScreener from '@/components/InsiderScreener';
 import Logo from '@/components/Logo';
 
 function ChartBackground() {
@@ -127,6 +128,8 @@ export default function Home() {
         <SearchBar />
 
         <WatchlistSection />
+
+        <InsiderScreener />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-32">
           <FeatureCard 
