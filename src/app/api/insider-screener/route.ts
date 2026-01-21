@@ -34,13 +34,21 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
       throw new Error('Table not found');
     }
 
+    const tbodyRegex = /<tbody>([\s\S]*?)<\/tbody>/i;
+    const tbodyMatch = tableMatch[1].match(tbodyRegex);
+    
+    if (!tbodyMatch) {
+      throw new Error('tbody not found');
+    }
+    
     const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-    const rows = tableMatch[1].match(rowRegex) || [];
+    const rows = tbodyMatch[1].match(rowRegex) || [];
     
     const trades: InsiderTrade[] = [];
     
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
+    for (const row of rows) {
+      if (!row.includes('P - Purchase')) continue;
+      
       const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
       const cells: string[] = [];
       let match;
@@ -49,19 +57,24 @@ async function scrapeOpenInsider(): Promise<InsiderTrade[]> {
         const cellContent = match[1]
           .replace(/<[^>]*>/g, '')
           .replace(/&nbsp;/g, ' ')
+          .replace(/\s+/g, ' ')
           .trim();
         cells.push(cellContent);
       }
       
-      if (cells.length < 10) continue;
+      if (cells.length < 13) continue;
       
+      const transactionDate = cells[2];
       const symbol = cells[3];
       const companyName = cells[4];
       const insiderName = cells[5];
-      const transactionDate = cells[1];
-      const shares = parseFloat(cells[8].replace(/,/g, '')) || 0;
-      const price = parseFloat(cells[9].replace(/[$,]/g, '')) || 0;
-      const value = parseFloat(cells[10].replace(/[$,]/g, '')) || 0;
+      const sharesStr = cells[9].replace(/[+,]/g, '');
+      const priceStr = cells[8].replace(/[$,]/g, '');
+      const valueStr = cells[12].replace(/[+$,]/g, '');
+      
+      const shares = parseFloat(sharesStr) || 0;
+      const price = parseFloat(priceStr) || 0;
+      const value = parseFloat(valueStr) || 0;
       
       if (symbol && shares > 0 && value > 0) {
         trades.push({
