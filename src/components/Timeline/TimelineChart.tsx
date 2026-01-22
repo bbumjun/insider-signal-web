@@ -161,7 +161,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
           time: t.transactionDate,
           position: hasOpenMarketBuy && isBuy ? 'aboveBar' : (isBuy ? 'belowBar' : 'aboveBar'),
           color: isBuy ? (hasOpenMarketBuy ? '#fbbf24' : '#10b981') : '#ef4444',
-          shape: hasOpenMarketBuy && isBuy ? 'arrowDown' : 'circle',
+          shape: 'circle',
           text: hasOpenMarketBuy && isBuy ? '★' : '',
         });
       }
