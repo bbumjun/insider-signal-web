@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
-import { createChart, ColorType, AreaSeries, HistogramSeries, LineSeries, createSeriesMarkers, SeriesMarker } from 'lightweight-charts';
+import { createChart, ColorType, AreaSeries, HistogramSeries, createSeriesMarkers, SeriesMarker } from 'lightweight-charts';
 import { StockPrice, InsiderTransaction, CompanyNews } from '@/types';
 
 interface TimelineChartProps {
@@ -119,35 +119,6 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       borderVisible: false,
     });
 
-    const openMarketBuyPoints = insiderTransactions
-      .filter(t => t.transactionCode === 'P' && t.transactionPrice > 0)
-      .map(t => ({ time: t.transactionDate, value: t.transactionPrice }))
-      .sort((a, b) => a.time.localeCompare(b.time));
-
-    const openMarketBuySeries = chart.addSeries(LineSeries, {
-      color: 'transparent',
-      lineWidth: 1,
-      lineVisible: false,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false,
-      priceScaleId: 'right',
-    });
-    openMarketBuySeries.setData(openMarketBuyPoints);
-
-    if (openMarketBuyPoints.length > 0) {
-      const buyMarkers: SeriesMarker<string>[] = openMarketBuyPoints.map(p => ({
-        time: p.time,
-        position: 'inBar' as const,
-        color: '#fbbf24',
-        shape: 'circle' as const,
-        text: '★',
-        size: 2,
-      }));
-      const buySeriesMarkers = createSeriesMarkers(openMarketBuySeries);
-      buySeriesMarkers.setMarkers(buyMarkers);
-    }
-
     chart.applyOptions({
       crosshair: {
         vertLine: { color: '#475569', width: 1, style: 1, labelBackgroundColor: '#1e293b' },
@@ -175,23 +146,23 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     
     insiderTransactions.forEach(t => {
       const isOpenMarketBuy = t.transactionCode === 'P';
-      const isBuy = ['A', 'M'].includes(t.transactionCode);
+      const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
       const isSell = t.transactionCode === 'S';
       
-      if (!isBuy && !isSell && !isOpenMarketBuy) return;
-      if (isOpenMarketBuy) return;
+      if (!isBuy && !isSell) return;
       
       const key = `${t.transactionDate}-${isBuy ? 'BUY' : 'SELL'}`;
       if (seenInsider.has(key)) return;
       seenInsider.add(key);
       const priceAtDate = prices.find(p => p.date === t.transactionDate)?.close;
       if (priceAtDate) {
+        const hasOpenMarketBuy = openMarketBuyDates.has(t.transactionDate);
         markers.push({
           time: t.transactionDate,
-          position: isBuy ? 'belowBar' : 'aboveBar',
-          color: isBuy ? '#10b981' : '#ef4444',
+          position: hasOpenMarketBuy && isBuy ? 'aboveBar' : (isBuy ? 'belowBar' : 'aboveBar'),
+          color: isBuy ? (hasOpenMarketBuy ? '#fbbf24' : '#10b981') : '#ef4444',
           shape: 'circle',
-          text: '',
+          text: hasOpenMarketBuy && isBuy ? '★' : '',
         });
       }
     });
@@ -260,7 +231,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       html += `</div>`;
 
       const groupByPerson = (txns: InsiderTransaction[]) => {
-        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string> }>();
+        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string>; avgPrice: number; txnCount: number }>();
         txns.forEach(t => {
           const existing = grouped.get(t.name);
           const value = t.share * (t.transactionPrice || 1);
@@ -268,11 +239,15 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
             existing.totalShares += t.share;
             existing.totalValue += value;
             existing.codes.add(t.transactionCode);
+            existing.txnCount += 1;
           } else {
-            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value, codes: new Set([t.transactionCode]) });
+            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value, codes: new Set([t.transactionCode]), avgPrice: t.transactionPrice || 0, txnCount: 1 });
           }
         });
-        return Array.from(grouped.values());
+        return Array.from(grouped.values()).map(g => ({
+          ...g,
+          avgPrice: g.totalShares > 0 ? g.totalValue / g.totalShares : 0,
+        }));
       };
 
       const getCodesLabel = (codes: Set<string>) => {
@@ -295,6 +270,9 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
           html += `${g.name}<br/>`;
           html += `<span class="${isOpenMarket ? 'text-yellow-400/70' : 'text-slate-500'}">${getCodesLabel(g.codes)}</span><br/>`;
           html += `${Number(g.totalShares).toLocaleString()}주 · ${formatValue(g.totalValue)}`;
+          if (isOpenMarket && g.avgPrice > 0) {
+            html += `<br/><span class="text-yellow-400 font-semibold">@$${g.avgPrice.toFixed(2)}</span>`;
+          }
           html += `</div>`;
         });
         html += '</div>';
