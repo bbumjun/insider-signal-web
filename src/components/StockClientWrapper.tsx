@@ -5,6 +5,7 @@ import TimelineChart from '@/components/Timeline/TimelineChart';
 import ActivityTimeline from '@/components/Timeline/ActivityTimeline';
 import InsightPanel from '@/components/InsightPanel';
 import PeriodSelector from '@/components/PeriodSelector';
+import OpenMarketBuyReturn from '@/components/OpenMarketBuyReturn';
 import { StockData } from '@/types';
 
 type Period = '1M' | '3M' | '1Y';
@@ -59,7 +60,11 @@ export default function StockClientWrapper({ symbol, fullData }: StockClientWrap
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
         <div className="lg:col-span-7 flex flex-col">
-          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">AI 인사이트</h3>
+          <OpenMarketBuyReturn 
+            insiderTransactions={fullData.insiderTransactions} 
+            prices={fullData.prices} 
+          />
+          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 mt-6">AI 인사이트</h3>
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl flex-1 min-h-[350px] sm:min-h-[400px]">
             <InsightPanel symbol={symbol} data={fullData} />
           </div>
