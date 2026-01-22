@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
+import { Flame, ChevronRight, TrendingUp } from 'lucide-react';
 
 interface InsiderTrade {
   symbol: string;
@@ -39,22 +39,18 @@ export default function InsiderScreener() {
 
   if (loading) {
     return (
-      <section className="mt-16 sm:mt-24">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-yellow-400" />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold">최근 내부자 매수</h2>
-            <p className="text-slate-400 text-sm">지난 30일 공개시장 매수 TOP 10</p>
-          </div>
+      <section className="mt-12 sm:mt-16">
+        <div className="flex items-center gap-2 mb-4">
+          <Flame className="w-5 h-5 text-amber-400" />
+          <h2 className="text-base sm:text-lg font-semibold">Hot Insider Buys</h2>
+          <span className="text-xs text-slate-500 ml-1">30D</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-slate-800 rounded w-16 mb-2" />
-              <div className="h-3 bg-slate-800 rounded w-32 mb-3" />
-              <div className="h-3 bg-slate-800 rounded w-24" />
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-36 bg-slate-900/60 border border-slate-800/50 rounded-lg p-3 animate-pulse">
+              <div className="h-5 bg-slate-800 rounded w-12 mb-2" />
+              <div className="h-3 bg-slate-800 rounded w-full mb-2" />
+              <div className="h-4 bg-slate-800 rounded w-16" />
             </div>
           ))}
         </div>
@@ -62,58 +58,63 @@ export default function InsiderScreener() {
     );
   }
 
-  if (trades.length === 0) {
-    return null;
-  }
+  if (trades.length === 0) return null;
 
   return (
-    <section className="mt-16 sm:mt-24">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-          <TrendingUp className="w-5 h-5 text-yellow-400" />
-        </div>
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">최근 내부자 매수</h2>
-          <p className="text-slate-400 text-sm">지난 30일 공개시장 매수 TOP 10</p>
+    <section className="mt-12 sm:mt-16">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-amber-500/10">
+            <Flame className="w-4 h-4 text-amber-400" />
+          </div>
+          <h2 className="text-base sm:text-lg font-semibold">Hot Insider Buys</h2>
+          <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded">30D</span>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {trades.map((trade) => (
-          <Link
-            key={trade.symbol}
-            href={`/stock/${trade.symbol}`}
-            className="group bg-slate-900/40 border border-slate-800 rounded-xl p-4 hover:border-yellow-500/30 hover:bg-slate-900/60 transition-all"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="text-lg font-bold text-yellow-400 group-hover:text-yellow-300 transition-colors">
-                  {trade.symbol}
+      
+      <div className="relative">
+        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+          {trades.slice(0, 10).map((trade, idx) => (
+            <Link
+              key={trade.symbol}
+              href={`/stock/${trade.symbol}`}
+              className="group flex-shrink-0 snap-start"
+            >
+              <div className="relative w-[140px] bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/60 rounded-xl p-3 hover:border-amber-500/40 hover:from-slate-800/80 hover:to-slate-900/60 transition-all duration-200">
+                {idx < 3 && (
+                  <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-black shadow-lg shadow-amber-500/20">
+                    {idx + 1}
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-base font-bold text-amber-400 group-hover:text-amber-300 transition-colors">
+                    {trade.symbol}
+                  </span>
+                  <TrendingUp className="w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-xs text-slate-400 line-clamp-1">
+                
+                <p className="text-[10px] text-slate-500 truncate mb-2 leading-tight">
                   {trade.companyName}
+                </p>
+                
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-emerald-400">
+                      {formatValue(trade.totalValue)}
+                    </div>
+                    <div className="text-[9px] text-slate-600">
+                      {trade.insiderCount} insider{trade.insiderCount > 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
-              <div className="text-xs text-slate-500">
-                {new Date(trade.latestDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
-              </div>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <div>
-                <div className="text-emerald-400 font-semibold">
-                  {formatValue(trade.totalValue)}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {trade.insiderCount}명 · {trade.tradeCount}건
-                </div>
-              </div>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
+        
+        <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-black to-transparent pointer-events-none" />
       </div>
     </section>
   );

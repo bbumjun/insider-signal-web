@@ -1,5 +1,4 @@
 import SearchBar from '@/components/SearchBar';
-import { TrendingUp, Activity, Award } from 'lucide-react';
 import AuthButton from '@/components/AuthButton';
 import WatchlistSection from '@/components/WatchlistSection';
 import InsiderScreener from '@/components/InsiderScreener';
@@ -130,37 +129,7 @@ export default function Home() {
         <WatchlistSection />
 
         <InsiderScreener />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-16 sm:mt-32">
-          <FeatureCard 
-            icon={<TrendingUp className="w-6 h-6 text-emerald-400" />}
-            title="주가 상관관계"
-            description="내부자가 언제 매수/매도했는지 차트에서 한눈에 확인하세요."
-          />
-          <FeatureCard 
-            icon={<Activity className="w-6 h-6 text-cyan-400" />}
-            title="뉴스 통합"
-            description="주요 헤드라인과 주가 변동, 내부자 거래의 연결고리를 파악하세요."
-          />
-          <FeatureCard 
-            icon={<Award className="w-6 h-6 text-purple-400" />}
-            title="AI 인사이트"
-            description="트랙 레코드와 향후 트렌드에 대한 즉각적인 분석을 받아보세요."
-          />
-        </div>
       </div>
     </main>
-  );
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 hover:border-emerald-500/30 hover:bg-slate-900/80 transition-all group">
-      <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
-      <h3 className="text-xl font-bold mb-3">{title}</h3>
-      <p className="text-slate-400 leading-relaxed">{description}</p>
-    </div>
   );
 }
