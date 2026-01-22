@@ -1,6 +1,6 @@
 import { fetchInsiderTransactions, fetchCompanyNews } from '@/lib/api/finnhub';
 import { getMockStockData } from '@/lib/utils/mockData';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, TrendingUp, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { StockData } from '@/types';
 import YahooFinance from 'yahoo-finance2';
@@ -18,6 +18,7 @@ interface StockPageProps {
 
 interface StockDataWithMeta extends StockData {
   companyName: string | null;
+  changePercent: number | null;
 }
 
 async function getStockData(symbol: string): Promise<StockDataWithMeta> {
@@ -33,6 +34,9 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
     });
 
     const companyName = chartResult.meta?.shortName || chartResult.meta?.longName || null;
+    const changePercent = typeof chartResult.meta?.regularMarketChangePercent === 'number' 
+      ? chartResult.meta.regularMarketChangePercent 
+      : null;
     const quotes = chartResult.quotes;
     if (!quotes || quotes.length === 0) throw new Error('No price data');
 
@@ -50,13 +54,13 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
 
     if (prices.length === 0) {
       console.log(`No real price data for ${symbol}, returning mock`);
-      return { ...getMockStockData(symbol), companyName };
+      return { ...getMockStockData(symbol), companyName, changePercent };
     }
 
-    return { prices, insiderTransactions, news, companyName };
+    return { prices, insiderTransactions, news, companyName, changePercent };
   } catch (err) {
     console.error('Data fetching error:', err);
-    return { ...getMockStockData(symbol), companyName: null };
+    return { ...getMockStockData(symbol), companyName: null, changePercent: null };
   }
 }
 
@@ -79,6 +83,20 @@ export default async function StockPage({ params }: StockPageProps) {
                 {data.companyName && (
                   <span className="text-slate-400 text-xs sm:text-sm font-normal truncate max-w-[100px] sm:max-w-[250px]">
                     {data.companyName}
+                  </span>
+                )}
+                {data.changePercent !== null && (
+                  <span className={`flex items-center gap-0.5 text-xs sm:text-sm font-semibold px-1.5 py-0.5 rounded ${
+                    data.changePercent >= 0 
+                      ? 'text-emerald-400 bg-emerald-500/10' 
+                      : 'text-red-400 bg-red-500/10'
+                  }`}>
+                    {data.changePercent >= 0 ? (
+                      <TrendingUp className="w-3 h-3" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3" />
+                    )}
+                    {data.changePercent >= 0 ? '+' : ''}{data.changePercent.toFixed(2)}%
                   </span>
                 )}
               </h1>
