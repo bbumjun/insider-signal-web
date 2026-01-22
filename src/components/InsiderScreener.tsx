@@ -51,8 +51,8 @@ export default function InsiderScreener() {
       <section className="mt-12 sm:mt-16">
         <div className="flex items-center gap-2 mb-4">
           <Flame className="w-5 h-5 text-amber-400" />
-          <h2 className="text-base sm:text-lg font-semibold">Hot Insider Buys</h2>
-          <span className="text-xs text-slate-500 ml-1">30D</span>
+          <h2 className="text-base sm:text-lg font-semibold">공개 매수 시그널</h2>
+          <span className="text-xs text-slate-500 ml-1">30일</span>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {[...Array(5)].map((_, i) => (
@@ -76,8 +76,8 @@ export default function InsiderScreener() {
           <div className="p-1.5 rounded-md bg-amber-500/10">
             <Flame className="w-4 h-4 text-amber-400" />
           </div>
-          <h2 className="text-base sm:text-lg font-semibold">Hot Insider Buys</h2>
-          <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded">30D</span>
+          <h2 className="text-base sm:text-lg font-semibold">공개 매수 시그널</h2>
+          <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded">30일</span>
         </div>
       </div>
       
@@ -118,7 +118,7 @@ export default function InsiderScreener() {
                     trade.returnPct >= 0 ? 'text-emerald-400' : 'text-red-400'
                   }`}>
                     {formatReturn(trade.returnPct)}
-                    <span className="text-[9px] font-normal text-slate-500 ml-1">since buy</span>
+                    <span className="text-[9px] font-normal text-slate-500 ml-1">매수 후</span>
                   </div>
                 )}
                 
@@ -128,7 +128,7 @@ export default function InsiderScreener() {
                       {formatValue(trade.totalValue)}
                     </div>
                     <div className="text-[9px] text-slate-600">
-                      {trade.insiderCount} insider{trade.insiderCount > 1 ? 's' : ''}
+                      {trade.insiderCount}명 매수
                     </div>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />

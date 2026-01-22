@@ -54,8 +54,8 @@ export default function OpenMarketBuyReturn({ insiderTransactions, prices }: Ope
             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-amber-300">Open Market Buy</h3>
-            <p className="text-[10px] text-slate-500">Strongest bullish signal</p>
+            <h3 className="text-sm font-semibold text-amber-300">공개 시장 매수</h3>
+            <p className="text-[10px] text-slate-500">가장 강력한 매수 시그널</p>
           </div>
         </div>
         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
@@ -70,11 +70,11 @@ export default function OpenMarketBuyReturn({ insiderTransactions, prices }: Ope
       
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">Last Buy Price</p>
+          <p className="text-slate-500 text-xs mb-0.5">매수가</p>
           <p className="font-semibold">${returnData.buyPrice.toFixed(2)}</p>
         </div>
         <div>
-          <p className="text-slate-500 text-xs mb-0.5">Current Price</p>
+          <p className="text-slate-500 text-xs mb-0.5">현재가</p>
           <p className={`font-semibold ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
             ${returnData.currentPrice.toFixed(2)}
           </p>
@@ -86,11 +86,11 @@ export default function OpenMarketBuyReturn({ insiderTransactions, prices }: Ope
           <div className="text-slate-500">
             <span className="text-slate-400">{returnData.buyerName.split(' ')[0]}</span>
             {' · '}
-            {returnData.daysSinceBuy}d ago
+            {returnData.daysSinceBuy}일 전
           </div>
           {returnData.totalBuys > 1 && (
             <div className="text-amber-400/70">
-              +{returnData.totalBuys - 1} more buy{returnData.totalBuys > 2 ? 's' : ''}
+              +{returnData.totalBuys - 1}건 추가 매수
             </div>
           )}
         </div>
