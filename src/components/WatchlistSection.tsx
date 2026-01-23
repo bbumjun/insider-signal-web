@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { Star, ChevronRight, X } from 'lucide-react';
+import { Star, X } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -110,14 +110,13 @@ export default function WatchlistSection() {
               className="flex items-center gap-1.5 sm:gap-2"
             >
               <span className="font-semibold text-white text-sm sm:text-base">{item.symbol}</span>
-              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
             </Link>
             <button
               onClick={(e) => {
                 e.preventDefault();
                 removeMutation.mutate(item.symbol);
               }}
-              className="ml-0.5 sm:ml-1 p-0.5 sm:p-1 rounded-full hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+              className="ml-1 p-0.5 rounded-full hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors"
               title="관심종목에서 제거"
             >
               <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
