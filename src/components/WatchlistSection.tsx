@@ -74,7 +74,6 @@ export default function WatchlistSection() {
               className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-slate-900/60 border border-slate-800/50 animate-pulse"
             >
               <div className="h-4 w-12 bg-slate-700 rounded" />
-              <div className="h-3 w-16 bg-slate-800 rounded hidden sm:block" />
             </div>
           ))}
         </div>
@@ -111,11 +110,6 @@ export default function WatchlistSection() {
               className="flex items-center gap-1.5 sm:gap-2"
             >
               <span className="font-semibold text-white text-sm sm:text-base">{item.symbol}</span>
-              {item.company_name && (
-                <span className="text-xs sm:text-sm text-slate-400 max-w-[80px] sm:max-w-[120px] truncate hidden sm:inline">
-                  {item.company_name}
-                </span>
-              )}
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
             </Link>
             <button
