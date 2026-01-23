@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Newspaper, ArrowUpCircle, ArrowDownCircle, Star, ChevronDown, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { Newspaper, ArrowUpCircle, ArrowDownCircle, Star, ChevronDown, ExternalLink, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { InsiderTransaction, CompanyNews } from '@/types';
@@ -13,6 +14,8 @@ function cn(...inputs: ClassValue[]) {
 interface ActivityTimelineProps {
   insiderTransactions: InsiderTransaction[];
   news: CompanyNews[];
+  limit?: number;
+  showMoreLink?: string;
 }
 
 function formatValue(v: number) {
@@ -56,10 +59,10 @@ function cleanSummaryText(text: string) {
     .trim();
 }
 
-export default function ActivityTimeline({ insiderTransactions, news }: ActivityTimelineProps) {
+export default function ActivityTimeline({ insiderTransactions, news, limit, showMoreLink }: ActivityTimelineProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-  const activities = [
+  const allActivities = [
     ...insiderTransactions.map((t) => ({
       type: 'insider' as const,
       date: t.transactionDate,
@@ -71,6 +74,9 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
       data: n,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const activities = limit ? allActivities.slice(0, limit) : allActivities;
+  const hasMore = limit ? allActivities.length > limit : false;
 
   if (activities.length === 0) {
     return (
@@ -208,6 +214,16 @@ export default function ActivityTimeline({ insiderTransactions, news }: Activity
           </div>
         );
       })}
+      
+      {hasMore && showMoreLink && (
+        <Link
+          href={showMoreLink}
+          className="flex items-center justify-center gap-2 p-4 text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+        >
+          <span>더보기</span>
+          <ChevronRight className="w-4 h-4" />
+        </Link>
+      )}
     </div>
   );
 }

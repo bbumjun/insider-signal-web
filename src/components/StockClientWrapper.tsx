@@ -58,22 +58,31 @@ export default function StockClientWrapper({ symbol, fullData }: StockClientWrap
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
-        <div className="lg:col-span-7 flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+        <div className="lg:col-span-7 flex flex-col gap-6">
           <OpenMarketBuyReturn 
             insiderTransactions={fullData.insiderTransactions} 
             prices={fullData.prices} 
           />
-          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 mt-6">AI 인사이트</h3>
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl flex-1 min-h-[350px] sm:min-h-[400px]">
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl sm:rounded-2xl min-h-[350px] sm:min-h-[400px]">
+            <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
+              <h3 className="text-base sm:text-lg font-bold">AI 인사이트</h3>
+            </div>
             <InsightPanel symbol={symbol} data={fullData} />
           </div>
         </div>
         
-        <div className="lg:col-span-5 flex flex-col">
-          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">타임라인</h3>
-          <div className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl overflow-y-auto max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] custom-scrollbar">
-            <ActivityTimeline insiderTransactions={filteredData.insiderTransactions} news={filteredData.news} />
+        <div className="lg:col-span-5">
+          <div className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl overflow-hidden">
+            <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+              <h3 className="text-base sm:text-lg font-bold">타임라인</h3>
+            </div>
+            <ActivityTimeline 
+              insiderTransactions={filteredData.insiderTransactions} 
+              news={filteredData.news}
+              limit={3}
+              showMoreLink={`/stock/${symbol}/timeline`}
+            />
           </div>
         </div>
       </div>
