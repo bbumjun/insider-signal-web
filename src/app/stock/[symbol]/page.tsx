@@ -28,15 +28,21 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
     const startDateStr = startDate.toISOString().split('T')[0];
     const todayStr = new Date().toISOString().split('T')[0];
     
-    const chartResult = await yahooFinance.chart(symbol, {
-      period1: startDateStr,
-      interval: '1d',
-    });
+    const [chartResult, quoteResult, insiderTransactions, news] = await Promise.all([
+      yahooFinance.chart(symbol, {
+        period1: startDateStr,
+        interval: '1d',
+      }),
+      yahooFinance.quote(symbol).catch(() => null),
+      fetchInsiderTransactions(symbol).catch(() => []),
+      fetchCompanyNews(symbol, startDateStr, todayStr).catch(() => []),
+    ]);
 
-    const companyName = chartResult.meta?.shortName || chartResult.meta?.longName || null;
-    const changePercent = typeof chartResult.meta?.regularMarketChangePercent === 'number' 
-      ? chartResult.meta.regularMarketChangePercent 
+    const companyName = quoteResult?.shortName || quoteResult?.longName || chartResult.meta?.shortName || chartResult.meta?.longName || null;
+    const changePercent = typeof quoteResult?.regularMarketChangePercent === 'number' 
+      ? quoteResult.regularMarketChangePercent 
       : null;
+    
     const quotes = chartResult.quotes;
     if (!quotes || quotes.length === 0) throw new Error('No price data');
 
@@ -46,11 +52,6 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
         date: q.date!.toISOString().split('T')[0],
         close: q.close!,
       }));
-
-    const [insiderTransactions, news] = await Promise.all([
-      fetchInsiderTransactions(symbol).catch(() => []),
-      fetchCompanyNews(symbol, startDateStr, todayStr).catch(() => []),
-    ]);
 
     if (prices.length === 0) {
       console.log(`No real price data for ${symbol}, returning mock`);
