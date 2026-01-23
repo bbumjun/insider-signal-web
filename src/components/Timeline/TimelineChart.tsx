@@ -186,23 +186,24 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let tooltipLocked = false;
-    let isMouseOverTooltip = false;
 
     const hideTooltip = () => {
-      if (tooltipRef.current && !isMouseOverTooltip) {
+      if (tooltipRef.current) {
         tooltipRef.current.style.display = 'none';
         tooltipLocked = false;
       }
     };
 
-    const handleTooltipMouseEnter = () => {
-      isMouseOverTooltip = true;
-    };
+    const markerDates = new Set<string>();
+    markers.forEach(m => markerDates.add(m.time));
 
-    const handleTooltipMouseLeave = () => {
-      isMouseOverTooltip = false;
-      hideTooltip();
-    };
+    chart.subscribeClick((param) => {
+      if (!param.time) return;
+      const dateStr = param.time as string;
+      if (markerDates.has(dateStr)) {
+        router.push(`/stock/${symbol}/timeline?date=${dateStr}`);
+      }
+    });
 
     const showTooltip = (dateStr: string, point: { x: number; y: number }) => {
       if (!tooltipRef.current || !chartContainerRef.current) return;
@@ -321,29 +322,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         html += '</div>';
       }
 
-      html += `<button class="tooltip-detail mt-2 w-full text-center text-[10px] py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors" data-date="${dateStr}">타임라인에서 보기 →</button>`;
+      html += `<div class="mt-2 text-[10px] text-slate-500 text-center">클릭하면 타임라인으로 이동</div>`;
 
       tooltipRef.current.innerHTML = html;
       tooltipRef.current.style.display = 'block';
-      tooltipRef.current.style.pointerEvents = 'auto';
+      tooltipRef.current.style.pointerEvents = isTouchDevice ? 'auto' : 'none';
       if (isTouchDevice) tooltipLocked = true;
-
-      tooltipRef.current.addEventListener('mouseenter', handleTooltipMouseEnter);
-      tooltipRef.current.addEventListener('mouseleave', handleTooltipMouseLeave);
 
       const closeBtn = tooltipRef.current.querySelector('.tooltip-close');
       if (closeBtn) {
         closeBtn.addEventListener('click', hideTooltip);
-      }
-
-      const detailBtn = tooltipRef.current.querySelector('.tooltip-detail');
-      if (detailBtn) {
-        detailBtn.addEventListener('click', (e) => {
-          const date = (e.target as HTMLElement).getAttribute('data-date');
-          if (date) {
-            router.push(`/stock/${symbol}/timeline?date=${date}`);
-          }
-        });
       }
 
       const chartRect = chartContainerRef.current.getBoundingClientRect();
@@ -369,13 +357,11 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !param.point) {
-        if (!isTouchDevice && !isMouseOverTooltip) hideTooltip();
+        if (!isTouchDevice) hideTooltip();
         return;
       }
       if (isTouchDevice && tooltipLocked) return;
-      if (!isMouseOverTooltip) {
-        showTooltip(param.time as string, param.point);
-      }
+      showTooltip(param.time as string, param.point);
     });
 
     const handleTouchOutside = (e: TouchEvent) => {
@@ -403,10 +389,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       if (isTouchDevice) {
         document.removeEventListener('touchstart', handleTouchOutside);
       }
-      if (tooltipRef.current) {
-        tooltipRef.current.removeEventListener('mouseenter', handleTooltipMouseEnter);
-        tooltipRef.current.removeEventListener('mouseleave', handleTooltipMouseLeave);
-      }
+
       chart.remove();
     };
   }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, newsByDate, period]);
