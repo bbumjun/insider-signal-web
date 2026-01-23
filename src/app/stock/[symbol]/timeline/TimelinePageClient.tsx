@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ActivityTimeline from '@/components/Timeline/ActivityTimeline';
 import PeriodSelector from '@/components/PeriodSelector';
 import { InsiderTransaction, CompanyNews } from '@/types';
@@ -19,6 +20,8 @@ interface TimelinePageClientProps {
 }
 
 export default function TimelinePageClient({ insiderTransactions, news }: TimelinePageClientProps) {
+  const searchParams = useSearchParams();
+  const initialDate = searchParams.get('date');
   const [period, setPeriod] = useState<Period>('1Y');
 
   const filteredData = useMemo(() => {
@@ -51,7 +54,8 @@ export default function TimelinePageClient({ insiderTransactions, news }: Timeli
       <div className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl overflow-hidden">
         <ActivityTimeline 
           insiderTransactions={filteredData.insiderTransactions} 
-          news={filteredData.news} 
+          news={filteredData.news}
+          initialExpandDate={initialDate || undefined}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Newspaper, ArrowUpCircle, ArrowDownCircle, Star, ChevronDown, ExternalLink, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -16,6 +16,7 @@ interface ActivityTimelineProps {
   news: CompanyNews[];
   limit?: number;
   showMoreLink?: string;
+  initialExpandDate?: string;
 }
 
 function formatValue(v: number) {
@@ -59,8 +60,8 @@ function cleanSummaryText(text: string) {
     .trim();
 }
 
-export default function ActivityTimeline({ insiderTransactions, news, limit, showMoreLink }: ActivityTimelineProps) {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+export default function ActivityTimeline({ insiderTransactions, news, limit, showMoreLink, initialExpandDate }: ActivityTimelineProps) {
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const allActivities = [
     ...insiderTransactions.map((t) => ({
@@ -77,6 +78,23 @@ export default function ActivityTimeline({ insiderTransactions, news, limit, sho
 
   const activities = limit ? allActivities.slice(0, limit) : allActivities;
   const hasMore = limit ? allActivities.length > limit : false;
+
+  const getInitialExpandIndex = () => {
+    if (!initialExpandDate) return null;
+    const index = activities.findIndex((a) => a.date === initialExpandDate);
+    return index !== -1 ? index : null;
+  };
+
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(getInitialExpandIndex);
+
+  useEffect(() => {
+    if (initialExpandDate && expandedIndex !== null) {
+      const timeoutId = setTimeout(() => {
+        itemRefs.current[expandedIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
 
   if (activities.length === 0) {
     return (
@@ -98,10 +116,14 @@ export default function ActivityTimeline({ insiderTransactions, news, limit, sho
         const isExpanded = expandedIndex === i;
         
         return (
-          <div key={i} className={cn(
-            "transition-colors",
-            isOpenMarketBuy && "bg-emerald-500/5 border-l-2 border-emerald-500"
-          )}>
+          <div 
+            key={i} 
+            ref={(el) => { itemRefs.current[i] = el; }}
+            className={cn(
+              "transition-colors",
+              isOpenMarketBuy && "bg-emerald-500/5 border-l-2 border-emerald-500"
+            )}
+          >
             <button
               onClick={() => handleClick(i)}
               className={cn(

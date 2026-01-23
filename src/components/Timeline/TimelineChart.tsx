@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { createChart, ColorType, AreaSeries, HistogramSeries, createSeriesMarkers, SeriesMarker } from 'lightweight-charts';
 import { StockPrice, InsiderTransaction, CompanyNews } from '@/types';
 
@@ -15,6 +16,7 @@ interface TimelineChartProps {
 export default function TimelineChart({ symbol, prices, insiderTransactions, news, period = '3M' }: TimelineChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { buyData, sellData, totalBuy, totalSell, transactionsByDate, newsByDate } = useMemo(() => {
     const buyMap = new Map<string, number>();
@@ -309,6 +311,8 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         html += '</div>';
       }
 
+      html += `<button class="tooltip-detail mt-2 w-full text-center text-[10px] py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors" data-date="${dateStr}">타임라인에서 보기 →</button>`;
+
       tooltipRef.current.innerHTML = html;
       tooltipRef.current.style.display = 'block';
       tooltipRef.current.style.pointerEvents = isTouchDevice ? 'auto' : 'none';
@@ -317,6 +321,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       const closeBtn = tooltipRef.current.querySelector('.tooltip-close');
       if (closeBtn) {
         closeBtn.addEventListener('click', hideTooltip);
+      }
+
+      const detailBtn = tooltipRef.current.querySelector('.tooltip-detail');
+      if (detailBtn) {
+        detailBtn.addEventListener('click', (e) => {
+          const date = (e.target as HTMLElement).getAttribute('data-date');
+          if (date) {
+            router.push(`/stock/${symbol}/timeline?date=${date}`);
+          }
+        });
       }
 
       const chartRect = chartContainerRef.current.getBoundingClientRect();
