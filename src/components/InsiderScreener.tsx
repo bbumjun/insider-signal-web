@@ -82,7 +82,7 @@ export default function InsiderScreener() {
       </div>
       
       <div className="relative">
-        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+        <div className="flex gap-2.5 overflow-x-auto pt-2 pb-2 scrollbar-hide snap-x snap-mandatory">
           {trades.slice(0, 10).map((trade, idx) => (
             <Link
               key={trade.symbol}
