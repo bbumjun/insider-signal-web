@@ -64,6 +64,7 @@ export default function OpenMarketBuyReturn({ insiderTransactions, prices }: Ope
             : 'bg-red-500/20 text-red-400'
         }`}>
           {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          <span className="text-[10px] font-normal opacity-70">매수 후</span>
           {isPositive ? '+' : ''}{returnData.returnPct.toFixed(1)}%
         </div>
       </div>
