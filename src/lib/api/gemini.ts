@@ -74,7 +74,7 @@ function analyzeOpenMarketBuys(transactions: InsiderTransaction[]) {
 `;
 }
 
-export async function generateAnalysis(symbol: string, data: StockData) {
+function buildPrompt(symbol: string, data: StockData): string {
   const optionPatterns = analyzeOptionPatterns(data.insiderTransactions);
   const optionAnalysis = optionPatterns.length > 0 
     ? `\n스톡옵션 행사 패턴 분석:\n${optionPatterns.join('\n')}\n` 
@@ -82,7 +82,7 @@ export async function generateAnalysis(symbol: string, data: StockData) {
   
   const openMarketAnalysis = analyzeOpenMarketBuys(data.insiderTransactions);
 
-  const prompt = `
+  return `
     다음 ${symbol} 종목을 분석해주세요:
     
     [1. 뉴스 - 가장 중요]
@@ -150,6 +150,11 @@ export async function generateAnalysis(symbol: string, data: StockData) {
     - 각 bullet 25자 이내
     - 마크다운 강조 금지
   `;
+}
+
+// 기존 blocking 방식 (캐시 저장용으로 유지)
+export async function generateAnalysis(symbol: string, data: StockData) {
+  const prompt = buildPrompt(symbol, data);
 
   const maxRetries = 3;
   let lastError: Error | null = null;
@@ -166,6 +171,43 @@ export async function generateAnalysis(symbol: string, data: StockData) {
       }
       
       return response.text;
+    } catch (error) {
+      lastError = error as Error;
+      const isRetryable = lastError.message?.includes('503') || 
+                          lastError.message?.includes('overloaded') ||
+                          lastError.message?.includes('UNAVAILABLE');
+      
+      if (isRetryable && attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('Failed after retries');
+}
+
+// 스트리밍 방식 (실시간 응답용)
+export async function* generateAnalysisStream(symbol: string, data: StockData) {
+  const prompt = buildPrompt(symbol, data);
+
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await ai.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      
+      for await (const chunk of response) {
+        if (chunk.text) {
+          yield chunk.text;
+        }
+      }
+      return;
     } catch (error) {
       lastError = error as Error;
       const isRetryable = lastError.message?.includes('503') || 

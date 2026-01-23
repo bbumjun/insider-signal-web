@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import { generateAnalysis } from '@/lib/api/gemini';
+import { generateAnalysisStream } from '@/lib/api/gemini';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { StockData } from '@/types';
 
@@ -27,39 +26,65 @@ export async function POST(
 
   if (cached) {
     console.log(`[Cache Hit] Serving analysis for ${symbol} from Supabase`);
-    return NextResponse.json({ insight: cached.content });
+    return new Response(cached.content, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Cache': 'HIT',
+      },
+    });
   }
 
-  console.log(`[Cache Miss] Generating new analysis for ${symbol} via Gemini`);
-  try {
-    const insight = await generateAnalysis(symbol, { prices, insiderTransactions, news });
+  console.log(`[Cache Miss] Streaming analysis for ${symbol} via Gemini`);
+  
+  const encoder = new TextEncoder();
+  let fullContent = '';
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const generator = generateAnalysisStream(symbol, { prices, insiderTransactions, news });
+        
+        for await (const chunk of generator) {
+          fullContent += chunk;
+          controller.enqueue(encoder.encode(chunk));
+        }
+        
+        controller.close();
 
-    const { error: insertError } = await supabase.from('ai_insights').insert({
-      symbol: symbol.toUpperCase(),
-      content: insight,
-      expires_at: tomorrow.toISOString(),
-    });
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
 
-    if (insertError) {
-      console.error('[Supabase Insert Error]', insertError);
-    }
+        supabase.from('ai_insights').insert({
+          symbol: symbol.toUpperCase(),
+          content: fullContent,
+          expires_at: tomorrow.toISOString(),
+        }).then(({ error }) => {
+          if (error) {
+            console.error('[Supabase Insert Error]', error);
+          } else {
+            console.log(`[Cache Saved] ${symbol}`);
+          }
+        });
+      } catch (error) {
+        const err = error as Error;
+        console.error('[Analysis Error]', {
+          symbol,
+          message: err.message,
+          stack: err.stack,
+          name: err.name,
+        });
+        controller.enqueue(encoder.encode(`[ERROR] ${err.message}`));
+        controller.close();
+      }
+    },
+  });
 
-    return NextResponse.json({ insight });
-  } catch (error) {
-    const err = error as Error;
-    console.error('[Analysis Error]', {
-      symbol,
-      message: err.message,
-      stack: err.stack,
-      name: err.name,
-    });
-    return NextResponse.json({ 
-      error: 'Failed to generate analysis',
-      details: err.message 
-    }, { status: 500 });
-  }
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Cache': 'MISS',
+      'Transfer-Encoding': 'chunked',
+    },
+  });
 }

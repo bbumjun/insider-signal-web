@@ -164,34 +164,78 @@ function formatText(text: string) {
 export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchedSymbol, setFetchedSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     if (fetchedSymbol === symbol) return;
 
+    const controller = new AbortController();
+
     const fetchInsight = async () => {
       setLoading(true);
+      setStreaming(false);
       setError(null);
+      setInsight(null);
+      
       try {
         const response = await fetch(`/api/stock/${symbol}/analysis`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
+          signal: controller.signal,
         });
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        setInsight(result.insight);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch analysis');
+        }
+
+        const isStreaming = response.headers.get('X-Cache') === 'MISS';
+        
+        if (isStreaming && response.body) {
+          setStreaming(true);
+          setLoading(false);
+          
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let accumulated = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            accumulated += decoder.decode(value, { stream: true });
+            setInsight(accumulated);
+          }
+          
+          if (accumulated.startsWith('[ERROR]')) {
+            throw new Error(accumulated.replace('[ERROR] ', ''));
+          }
+          
+          setStreaming(false);
+        } else {
+          const text = await response.text();
+          if (text.startsWith('[ERROR]')) {
+            throw new Error(text.replace('[ERROR] ', ''));
+          }
+          setInsight(text);
+          setLoading(false);
+        }
+        
         setFetchedSymbol(symbol);
       } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
         console.error('AI Insight Error:', err);
-        setError('Failed to generate AI analysis. Please try again later.');
-      } finally {
+        setError('AI 분석 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
         setLoading(false);
+        setStreaming(false);
       }
     };
 
     fetchInsight();
+    
+    return () => controller.abort();
   }, [symbol, data, fetchedSymbol]);
 
   return (
@@ -201,32 +245,52 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-slate-700/50" />
-              <div className="h-4 w-24 rounded bg-slate-700/50" />
+              <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin text-emerald-500/70" />
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-emerald-500/70">AI 분석 중...</span>
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="h-5 w-32 rounded bg-slate-700/50" />
-                <div className="h-4 w-full rounded bg-slate-800/50" />
-                <div className="h-4 w-3/4 rounded bg-slate-800/50" />
+            
+            <div className="space-y-1.5 sm:space-y-2">
+              <div className="h-5 w-24 rounded bg-slate-700/50" />
+              <div className="h-4 w-full rounded bg-slate-800/50" />
+              <div className="h-4 w-4/5 rounded bg-slate-800/50" />
+            </div>
+
+            <div className="space-y-3 sm:space-y-4">
+              <div className="h-5 w-28 rounded bg-slate-700/50" />
+              <div className="flex justify-center items-center gap-8 sm:gap-16 py-4 sm:py-6 px-4 bg-gradient-to-b from-slate-800/40 to-slate-900/40 rounded-xl border border-slate-700/30">
+                <div className="flex flex-col items-center">
+                  <div className="w-[100px] h-[58px] sm:w-[120px] sm:h-[68px] rounded-t-full bg-slate-700/30" />
+                  <div className="mt-2 space-y-1 flex flex-col items-center">
+                    <div className="h-4 w-8 rounded bg-slate-700/50" />
+                    <div className="h-3 w-16 rounded bg-slate-800/50" />
+                  </div>
+                </div>
+                <div className="w-px h-20 bg-gradient-to-b from-transparent via-slate-600 to-transparent" />
+                <div className="flex flex-col items-center">
+                  <div className="w-[100px] h-[58px] sm:w-[120px] sm:h-[68px] rounded-t-full bg-slate-700/30" />
+                  <div className="mt-2 space-y-1 flex flex-col items-center">
+                    <div className="h-4 w-8 rounded bg-slate-700/50" />
+                    <div className="h-3 w-16 rounded bg-slate-800/50" />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="h-5 w-28 rounded bg-slate-700/50" />
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <div className="h-5 w-24 rounded bg-slate-700/50" />
+              <div className="pl-3 sm:pl-4 space-y-1.5">
                 <div className="h-4 w-full rounded bg-slate-800/50" />
                 <div className="h-4 w-5/6 rounded bg-slate-800/50" />
-                <div className="h-4 w-2/3 rounded bg-slate-800/50" />
+                <div className="h-4 w-3/4 rounded bg-slate-800/50" />
               </div>
-              <div className="space-y-2">
-                <div className="h-5 w-24 rounded bg-slate-700/50" />
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              <div className="h-5 w-28 rounded bg-slate-700/50" />
+              <div className="pl-3 sm:pl-4 space-y-1.5">
                 <div className="h-4 w-full rounded bg-slate-800/50" />
                 <div className="h-4 w-4/5 rounded bg-slate-800/50" />
               </div>
-            </div>
-          </div>
-          <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 flex justify-center">
-            <div className="flex items-center gap-2 text-emerald-500/70">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-xs sm:text-sm font-medium">AI 분석 중...</span>
             </div>
           </div>
         </div>
@@ -242,8 +306,14 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
       {insight && !loading && (
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center gap-2 text-emerald-500">
-            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest">분석 완료</span>
+            {streaming ? (
+              <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
+            )}
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest">
+              {streaming ? '분석 중...' : '분석 완료'}
+            </span>
           </div>
           <div className="space-y-4 sm:space-y-5 text-slate-300">
             {(() => {
