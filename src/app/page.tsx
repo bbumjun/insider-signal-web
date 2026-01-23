@@ -1,6 +1,5 @@
 import SearchBar from '@/components/SearchBar';
 import AuthButton from '@/components/AuthButton';
-import WatchlistSection from '@/components/WatchlistSection';
 import InsiderScreener from '@/components/InsiderScreener';
 import Logo from '@/components/Logo';
 
@@ -125,8 +124,6 @@ export default function Home() {
         </div>
 
         <SearchBar />
-
-        <WatchlistSection />
 
         <InsiderScreener />
       </div>
