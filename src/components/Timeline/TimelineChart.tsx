@@ -186,12 +186,22 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     let tooltipLocked = false;
+    let isMouseOverTooltip = false;
 
     const hideTooltip = () => {
-      if (tooltipRef.current) {
+      if (tooltipRef.current && !isMouseOverTooltip) {
         tooltipRef.current.style.display = 'none';
         tooltipLocked = false;
       }
+    };
+
+    const handleTooltipMouseEnter = () => {
+      isMouseOverTooltip = true;
+    };
+
+    const handleTooltipMouseLeave = () => {
+      isMouseOverTooltip = false;
+      hideTooltip();
     };
 
     const showTooltip = (dateStr: string, point: { x: number; y: number }) => {
@@ -315,8 +325,11 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       tooltipRef.current.innerHTML = html;
       tooltipRef.current.style.display = 'block';
-      tooltipRef.current.style.pointerEvents = isTouchDevice ? 'auto' : 'none';
+      tooltipRef.current.style.pointerEvents = 'auto';
       if (isTouchDevice) tooltipLocked = true;
+
+      tooltipRef.current.addEventListener('mouseenter', handleTooltipMouseEnter);
+      tooltipRef.current.addEventListener('mouseleave', handleTooltipMouseLeave);
 
       const closeBtn = tooltipRef.current.querySelector('.tooltip-close');
       if (closeBtn) {
@@ -356,11 +369,13 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !param.point) {
-        if (!isTouchDevice) hideTooltip();
+        if (!isTouchDevice && !isMouseOverTooltip) hideTooltip();
         return;
       }
       if (isTouchDevice && tooltipLocked) return;
-      showTooltip(param.time as string, param.point);
+      if (!isMouseOverTooltip) {
+        showTooltip(param.time as string, param.point);
+      }
     });
 
     const handleTouchOutside = (e: TouchEvent) => {
@@ -387,6 +402,10 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       window.removeEventListener('resize', handleResize);
       if (isTouchDevice) {
         document.removeEventListener('touchstart', handleTouchOutside);
+      }
+      if (tooltipRef.current) {
+        tooltipRef.current.removeEventListener('mouseenter', handleTooltipMouseEnter);
+        tooltipRef.current.removeEventListener('mouseleave', handleTooltipMouseLeave);
       }
       chart.remove();
     };
