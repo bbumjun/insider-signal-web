@@ -54,9 +54,9 @@ export default function InsiderScreener() {
           <h2 className="text-base sm:text-lg font-semibold">최근 내부자 매수 기업 TOP 10</h2>
           <span className="text-xs text-slate-500 ml-1">30일</span>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-36 bg-slate-900/60 border border-slate-800/50 rounded-lg p-3 animate-pulse">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="bg-slate-900/60 border border-slate-800/50 rounded-xl p-3 animate-pulse">
               <div className="h-5 bg-slate-800 rounded w-12 mb-2" />
               <div className="h-3 bg-slate-800 rounded w-full mb-2" />
               <div className="h-4 bg-slate-800 rounded w-16" />
@@ -81,64 +81,60 @@ export default function InsiderScreener() {
         </div>
       </div>
       
-      <div className="relative">
-        <div className="flex gap-2.5 overflow-x-auto pt-2 pb-2 scrollbar-hide snap-x snap-mandatory">
-          {trades.slice(0, 10).map((trade, idx) => (
-            <Link
-              key={trade.symbol}
-              href={`/stock/${trade.symbol}`}
-              className="group flex-shrink-0 snap-start"
-            >
-              <div className="relative w-[140px] bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/60 rounded-xl p-3 hover:border-amber-500/40 hover:from-slate-800/80 hover:to-slate-900/60 transition-all duration-200">
-                {idx < 3 && (
-                  <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-black shadow-lg shadow-amber-500/20">
-                    {idx + 1}
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-base font-bold text-amber-400 group-hover:text-amber-300 transition-colors">
-                    {trade.symbol}
-                  </span>
-                  {trade.returnPct !== null && (
-                    trade.returnPct >= 0 ? (
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3 text-red-500" />
-                    )
-                  )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 pt-2">
+        {trades.slice(0, 10).map((trade, idx) => (
+          <Link
+            key={trade.symbol}
+            href={`/stock/${trade.symbol}`}
+            className="group"
+          >
+            <div className="relative bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/60 rounded-xl p-3 hover:border-amber-500/40 hover:from-slate-800/80 hover:to-slate-900/60 transition-all duration-200">
+              {idx < 3 && (
+                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-[10px] font-bold text-black shadow-lg shadow-amber-500/20">
+                  {idx + 1}
                 </div>
-                
-                <p className="text-[10px] text-slate-500 truncate mb-2 leading-tight">
-                  {trade.companyName}
-                </p>
-                
+              )}
+              
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-base font-bold text-amber-400 group-hover:text-amber-300 transition-colors">
+                  {trade.symbol}
+                </span>
                 {trade.returnPct !== null && (
-                  <div className={`text-sm font-bold mb-1 ${
-                    trade.returnPct >= 0 ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {formatReturn(trade.returnPct)}
-                    <span className="text-[9px] font-normal text-slate-500 ml-1">매수 후</span>
-                  </div>
+                  trade.returnPct >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-emerald-500" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-red-500" />
+                  )
                 )}
-                
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="text-xs text-slate-400">
-                      {formatValue(trade.totalValue)}
-                    </div>
-                    <div className="text-[9px] text-slate-600">
-                      {trade.insiderCount}명 매수
-                    </div>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
-                </div>
               </div>
-            </Link>
-          ))}
-        </div>
-        
-        <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-black to-transparent pointer-events-none" />
+              
+              <p className="text-[10px] text-slate-500 truncate mb-2 leading-tight">
+                {trade.companyName}
+              </p>
+              
+              {trade.returnPct !== null && (
+                <div className={`text-sm font-bold mb-1 ${
+                  trade.returnPct >= 0 ? 'text-emerald-400' : 'text-red-400'
+                }`}>
+                  {formatReturn(trade.returnPct)}
+                  <span className="text-[9px] font-normal text-slate-500 ml-1">매수 후</span>
+                </div>
+              )}
+              
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-xs text-slate-400">
+                    {formatValue(trade.totalValue)}
+                  </div>
+                  <div className="text-[9px] text-slate-600">
+                    {trade.insiderCount}명 매수
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );
