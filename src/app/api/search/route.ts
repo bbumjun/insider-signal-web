@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache/supabaseCache';
+import { searchKoreanStocks, hasKoreanCharacters } from '@/lib/data/koreanStockNames';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const API_KEY = process.env.FINNHUB_API_KEY;
@@ -13,7 +14,7 @@ interface SearchResult {
   type: string;
 }
 
-async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
+async function searchFinnhub(query: string): Promise<SearchResult[]> {
   const response = await fetch(
     `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(query)}&token=${API_KEY}`
   );
@@ -31,6 +32,29 @@ async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
       return true;
     })
     .slice(0, 8);
+}
+
+async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
+  const koreanResults = searchKoreanStocks(query).map((stock) => ({
+    symbol: stock.symbol,
+    description: `${stock.nameKr} (${stock.nameEn})`,
+    displaySymbol: stock.symbol,
+    type: 'Common Stock',
+  }));
+
+  if (hasKoreanCharacters(query)) {
+    return koreanResults;
+  }
+
+  const finnhubResults = await searchFinnhub(query);
+  
+  const seen = new Set(koreanResults.map((r) => r.symbol));
+  const mergedResults = [
+    ...koreanResults,
+    ...finnhubResults.filter((r) => !seen.has(r.symbol)),
+  ];
+
+  return mergedResults.slice(0, 10);
 }
 
 export async function GET(request: Request) {

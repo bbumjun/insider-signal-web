@@ -193,7 +193,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          placeholder={compact ? "종목 검색..." : "종목 코드 입력 (예: AAPL, NVDA)..."}
+          placeholder={compact ? "종목 검색..." : "종목 검색 (예: 애플, NVDA, 테슬라)..."}
           className={`w-full ${compact ? 'h-9 pl-8 pr-3 rounded-lg text-sm' : 'h-12 sm:h-14 pl-10 sm:pl-12 pr-20 sm:pr-24 rounded-xl sm:rounded-2xl text-sm sm:text-base'} bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
         />
         {isLoading ? (
