@@ -54,12 +54,32 @@ export default function WatchlistSection() {
     },
   });
 
-  if (status === 'loading' || isLoading) {
+  // 로그인 상태 확인 중 또는 비로그인 시 렌더링 안 함
+  if (status === 'loading' || !session) {
     return null;
   }
 
-  if (!session) {
-    return null;
+  // 로그인 상태에서 관심종목 로딩 중 → 스켈레톤 표시 (CLS 방지)
+  if (isLoading) {
+    return (
+      <div className="mt-8 sm:mt-12">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-yellow-400" />
+          <h2 className="text-base sm:text-lg font-semibold">관심종목</h2>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-slate-900/60 border border-slate-800/50 animate-pulse"
+            >
+              <div className="h-4 w-12 bg-slate-700 rounded" />
+              <div className="h-3 w-16 bg-slate-800 rounded hidden sm:block" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (watchlist.length === 0) {
