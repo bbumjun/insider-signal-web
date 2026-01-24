@@ -110,5 +110,5 @@ async function fetchCompanyProfileRaw(symbol: string): Promise<CompanyProfile> {
 export async function fetchCompanyProfile(symbol: string): Promise<CompanyProfile> {
   const cacheKey = `company_profile:${symbol.toUpperCase()}`;
 
-  return withCache(cacheKey, () => fetchCompanyProfileRaw(symbol), { ttlMinutes: 60 * 24 });
+  return withCache(cacheKey, () => fetchCompanyProfileRaw(symbol), { ttlMinutes: 60 * 24 * 30 });
 }
