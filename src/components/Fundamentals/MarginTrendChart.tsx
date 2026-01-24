@@ -38,9 +38,9 @@ export default function MarginTrendChart({ data }: MarginTrendChartProps) {
         <p className="text-xs text-slate-500 mt-1">분기별 마진율 변화 (%)</p>
       </div>
 
-      <div className="h-[280px] sm:h-[320px]">
+      <div className="h-[280px] sm:h-[320px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis
               dataKey="name"

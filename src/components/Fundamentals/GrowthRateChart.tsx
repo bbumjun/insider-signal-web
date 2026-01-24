@@ -60,11 +60,11 @@ export default function GrowthRateChart({ data }: GrowthRateChartProps) {
         )}
       </div>
 
-      <div className="h-[280px] sm:h-[320px]">
+      <div className="h-[280px] sm:h-[320px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             barGap={4}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
