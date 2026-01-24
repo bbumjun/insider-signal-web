@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache/supabaseCache';
-import { searchKoreanStocks, hasKoreanCharacters } from '@/lib/data/koreanStockNames';
+import { searchKoreanStocksAsync, hasKoreanCharacters } from '@/lib/data/koreanStockSearch';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const API_KEY = process.env.FINNHUB_API_KEY;
@@ -35,7 +35,8 @@ async function searchFinnhub(query: string): Promise<SearchResult[]> {
 }
 
 async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
-  const koreanResults = searchKoreanStocks(query).map((stock) => ({
+  const koreanStocks = searchKoreanStocksAsync(query);
+  const koreanResults = koreanStocks.map((stock) => ({
     symbol: stock.symbol,
     description: `${stock.nameKr} (${stock.nameEn})`,
     displaySymbol: stock.symbol,
