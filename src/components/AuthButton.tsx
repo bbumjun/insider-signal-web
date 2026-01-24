@@ -21,9 +21,7 @@ export default function AuthButton() {
   }, []);
 
   if (status === 'loading') {
-    return (
-      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 animate-pulse" />
-    );
+    return <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-800 animate-pulse" />;
   }
 
   if (!session) {
@@ -33,7 +31,7 @@ export default function AuthButton() {
         className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-xs sm:text-sm"
       >
         <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden xs:inline">로그인</span>
+        <span>로그인</span>
       </button>
     );
   }
