@@ -1,8 +1,11 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import { Star } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const PENDING_WATCHLIST_KEY = 'pendingWatchlist';
 
 interface WatchlistButtonProps {
   symbol: string;
@@ -33,7 +36,37 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
     enabled: !!session?.user,
   });
 
-  const isInWatchlist = watchlist.some((item) => item.symbol === upperSymbol);
+  const isInWatchlist = watchlist.some(item => item.symbol === upperSymbol);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user) return;
+
+    const pending = localStorage.getItem(PENDING_WATCHLIST_KEY);
+    if (!pending) return;
+
+    try {
+      const { symbol: pendingSymbol, companyName: pendingName } = JSON.parse(pending);
+      localStorage.removeItem(PENDING_WATCHLIST_KEY);
+
+      fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: pendingSymbol, companyName: pendingName }),
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['watchlist'] });
+      });
+    } catch {
+      localStorage.removeItem(PENDING_WATCHLIST_KEY);
+    }
+  }, [status, session, queryClient]);
+
+  const handleLoginAndAdd = () => {
+    localStorage.setItem(
+      PENDING_WATCHLIST_KEY,
+      JSON.stringify({ symbol: upperSymbol, companyName: companyName || null })
+    );
+    signIn('google');
+  };
 
   const addMutation = useMutation({
     mutationFn: async () => {
@@ -48,7 +81,11 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
       await queryClient.cancelQueries({ queryKey: ['watchlist'] });
       const previous = queryClient.getQueryData<WatchlistItem[]>(['watchlist']);
       queryClient.setQueryData<WatchlistItem[]>(['watchlist'], (old = []) => [
-        { symbol: upperSymbol, company_name: companyName || null, added_at: new Date().toISOString() },
+        {
+          symbol: upperSymbol,
+          company_name: companyName || null,
+          added_at: new Date().toISOString(),
+        },
         ...old,
       ]);
       return { previous };
@@ -74,7 +111,7 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
       await queryClient.cancelQueries({ queryKey: ['watchlist'] });
       const previous = queryClient.getQueryData<WatchlistItem[]>(['watchlist']);
       queryClient.setQueryData<WatchlistItem[]>(['watchlist'], (old = []) =>
-        old.filter((item) => item.symbol !== upperSymbol)
+        old.filter(item => item.symbol !== upperSymbol)
       );
       return { previous };
     },
@@ -109,9 +146,9 @@ export default function WatchlistButton({ symbol, companyName }: WatchlistButton
   if (!session) {
     return (
       <button
-        className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400"
-        title="로그인 후 관심종목에 추가할 수 있습니다"
-        disabled
+        onClick={handleLoginAndAdd}
+        className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-yellow-400"
+        title="로그인하고 관심종목에 추가"
       >
         <Star className="w-4 h-4 sm:w-5 sm:h-5" />
       </button>
