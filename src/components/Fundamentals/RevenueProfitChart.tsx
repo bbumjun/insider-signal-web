@@ -55,7 +55,7 @@ export default function RevenueProfitChart({ data, currency }: RevenueProfitChar
 
       <div className="h-[280px] sm:h-[320px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData} margin={{ top: 10, right: 35, left: -15, bottom: 0 }}>
+          <ComposedChart data={chartData} margin={{ top: 10, right: 5, left: -15, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis
               dataKey="name"
@@ -69,6 +69,7 @@ export default function RevenueProfitChart({ data, currency }: RevenueProfitChar
               tickFormatter={formatLargeNumber}
               axisLine={{ stroke: '#3b82f6' }}
               domain={[revenueMin, revenueMax]}
+              width={45}
             />
             <YAxis
               yAxisId="income"
@@ -77,6 +78,7 @@ export default function RevenueProfitChart({ data, currency }: RevenueProfitChar
               tickFormatter={formatLargeNumber}
               axisLine={{ stroke: '#10b981' }}
               domain={[incomeMin, incomeMax]}
+              width={45}
             />
             <Tooltip
               contentStyle={{
