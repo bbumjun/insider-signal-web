@@ -50,9 +50,12 @@ function getOverallGrade(score: number): { grade: string; color: string } {
 }
 
 export default function ScoreRadarChart({ scores, symbol }: ScoreRadarChartProps) {
+  const MIN_DISPLAY_VALUE = 10;
+
   const data = (Object.keys(SCORE_LABELS) as Array<keyof typeof SCORE_LABELS>).map(key => ({
     subject: SCORE_LABELS[key],
-    value: scores[key],
+    value: Math.max(MIN_DISPLAY_VALUE, scores[key]),
+    actualValue: scores[key],
     fullMark: 100,
     description: SCORE_DESCRIPTIONS[key],
   }));
@@ -101,9 +104,9 @@ export default function ScoreRadarChart({ scores, symbol }: ScoreRadarChartProps
                     <div className="text-xs text-slate-500">{item.description}</div>
                     <div
                       className="text-sm font-bold mt-1"
-                      style={{ color: getScoreColor(item.value) }}
+                      style={{ color: getScoreColor(item.actualValue) }}
                     >
-                      {item.value}점
+                      {item.actualValue}점
                     </div>
                   </div>
                 );
@@ -117,8 +120,11 @@ export default function ScoreRadarChart({ scores, symbol }: ScoreRadarChartProps
         {data.map(item => (
           <div key={item.subject} className="text-center">
             <div className="text-[10px] text-slate-500">{item.subject}</div>
-            <div className="text-sm font-semibold" style={{ color: getScoreColor(item.value) }}>
-              {item.value}
+            <div
+              className="text-sm font-semibold"
+              style={{ color: getScoreColor(item.actualValue) }}
+            >
+              {item.actualValue}
             </div>
           </div>
         ))}
