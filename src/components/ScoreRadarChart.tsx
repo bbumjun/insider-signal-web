@@ -80,12 +80,7 @@ export default function ScoreRadarChart({ scores, symbol }: ScoreRadarChartProps
           <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
             <PolarGrid stroke="#334155" />
             <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-            <PolarRadiusAxis
-              angle={30}
-              domain={[0, 100]}
-              tick={{ fill: '#64748b', fontSize: 10 }}
-              tickCount={5}
-            />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
             <Radar
               name={symbol}
               dataKey="value"
