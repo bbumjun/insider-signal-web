@@ -104,12 +104,21 @@ async function fetchCompanyFacts(cik: string): Promise<SECCompanyFacts | null> {
   }
 }
 
-function isQuarterlyPeriod(fact: SECFact): boolean {
-  if (!fact.start || !fact.end) return false;
+function getPeriodDays(fact: SECFact): number {
+  if (!fact.start || !fact.end) return 0;
   const startDate = new Date(fact.start);
   const endDate = new Date(fact.end);
-  const daysDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-  return daysDiff >= 80 && daysDiff <= 100;
+  return (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function isQuarterlyPeriod(fact: SECFact): boolean {
+  const days = getPeriodDays(fact);
+  return days >= 80 && days <= 100;
+}
+
+function isAnnualPeriod(fact: SECFact): boolean {
+  const days = getPeriodDays(fact);
+  return days >= 350 && days <= 380;
 }
 
 function extractQuarterlyValues(
@@ -130,17 +139,26 @@ function extractQuarterlyValues(
     let currentMaxYear = 0;
 
     const quarterlyFacts = concept.units.USD.filter(fact => {
-      if (fact.form === '10-K' && fact.fp === 'FY') {
-        return isQuarterlyPeriod(fact);
-      }
-      if (fact.form === '10-Q') {
-        return isQuarterlyPeriod(fact);
-      }
+      const isUSForm = fact.form === '10-K' || fact.form === '10-Q';
+      const isForeignForm = fact.form === '20-F' || fact.form === '20-F/A' || fact.form === '6-K';
+
+      if (!isUSForm && !isForeignForm) return false;
+
+      if (isQuarterlyPeriod(fact)) return true;
+      if (isForeignForm && isAnnualPeriod(fact)) return true;
+
       return false;
     });
 
     for (const fact of quarterlyFacts) {
-      const quarterKey = fact.fp === 'FY' ? `${fact.fy}-Q4` : `${fact.fy}-${fact.fp}`;
+      let quarterKey: string;
+      if (isAnnualPeriod(fact)) {
+        quarterKey = `${fact.fy}-FY`;
+      } else if (fact.fp === 'FY') {
+        quarterKey = `${fact.fy}-Q4`;
+      } else {
+        quarterKey = `${fact.fy}-${fact.fp}`;
+      }
 
       if (!currentMap.has(quarterKey)) {
         currentMap.set(quarterKey, fact.val);
@@ -158,16 +176,19 @@ function extractQuarterlyValues(
 }
 
 function quarterKeyToDate(quarterKey: string): string {
-  const [year, quarter] = quarterKey.split('-');
-  const quarterNum = parseInt(quarter.replace('Q', ''));
+  const [year, period] = quarterKey.split('-');
+  if (period === 'FY') {
+    return `${year}-12-31`;
+  }
+  const quarterNum = parseInt(period.replace('Q', ''));
   const month = quarterNum * 3;
   const lastDay = new Date(parseInt(year), month, 0).getDate();
   return `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
 }
 
 function getQuarterLabel(quarterKey: string): string {
-  const [year, quarter] = quarterKey.split('-');
-  return `${quarter} ${year}`;
+  const [year, period] = quarterKey.split('-');
+  return `${period} ${year}`;
 }
 
 export async function getQuarterlyFinancials(
