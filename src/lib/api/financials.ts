@@ -56,7 +56,7 @@ async function fetchMetricsRaw(symbol: string): Promise<CompanyMetrics | null> {
 
 export async function fetchCompanyMetrics(symbol: string): Promise<CompanyMetrics | null> {
   const cacheKey = `metrics:${symbol.toUpperCase()}`;
-  return withCache(cacheKey, () => fetchMetricsRaw(symbol), { ttlMinutes: 60 * 24 });
+  return withCache(cacheKey, () => fetchMetricsRaw(symbol), { ttlMinutes: 60 * 24 * 30 });
 }
 
 function normalizeScore(value: number | null, min: number, max: number, inverse = false): number {
