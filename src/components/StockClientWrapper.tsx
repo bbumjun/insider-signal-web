@@ -7,6 +7,7 @@ import InsightPanel from '@/components/InsightPanel';
 import PeriodSelector from '@/components/PeriodSelector';
 import OpenMarketBuyReturn from '@/components/OpenMarketBuyReturn';
 import ScoreRadarChartWrapper from '@/components/ScoreRadarChartWrapper';
+import CompanyDescription from '@/components/CompanyDescription';
 import { StockData } from '@/types';
 
 type Period = '1M' | '3M' | '1Y';
@@ -64,6 +65,8 @@ export default function StockClientWrapper({ symbol, fullData }: StockClientWrap
           />
         </div>
       </section>
+
+      <CompanyDescription symbol={symbol} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         <div className="lg:col-span-7 flex flex-col gap-6">
