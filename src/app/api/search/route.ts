@@ -22,7 +22,7 @@ async function searchFinnhub(query: string): Promise<SearchResult[]> {
   if (!response.ok) return [];
 
   const data = await response.json();
-  
+
   const seen = new Set<string>();
   return (data.result || [])
     .filter((item: SearchResult) => {
@@ -34,9 +34,35 @@ async function searchFinnhub(query: string): Promise<SearchResult[]> {
     .slice(0, 8);
 }
 
+function sortByRelevance(results: SearchResult[], query: string): SearchResult[] {
+  const q = query.toUpperCase();
+
+  return results.sort((a, b) => {
+    const aSymbol = a.symbol.toUpperCase();
+    const bSymbol = b.symbol.toUpperCase();
+
+    const aExact = aSymbol === q;
+    const bExact = bSymbol === q;
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+
+    const aStarts = aSymbol.startsWith(q);
+    const bStarts = bSymbol.startsWith(q);
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+
+    const aContains = aSymbol.includes(q);
+    const bContains = bSymbol.includes(q);
+    if (aContains && !bContains) return -1;
+    if (!aContains && bContains) return 1;
+
+    return aSymbol.length - bSymbol.length;
+  });
+}
+
 async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
   const koreanStocks = searchKoreanStocksAsync(query);
-  const koreanResults = koreanStocks.map((stock) => ({
+  const koreanResults = koreanStocks.map(stock => ({
     symbol: stock.symbol,
     description: `${stock.nameKr} (${stock.nameEn})`,
     displaySymbol: stock.symbol,
@@ -44,18 +70,15 @@ async function searchSymbolsRaw(query: string): Promise<SearchResult[]> {
   }));
 
   if (hasKoreanCharacters(query)) {
-    return koreanResults;
+    return sortByRelevance(koreanResults, query);
   }
 
   const finnhubResults = await searchFinnhub(query);
-  
-  const seen = new Set(koreanResults.map((r) => r.symbol));
-  const mergedResults = [
-    ...koreanResults,
-    ...finnhubResults.filter((r) => !seen.has(r.symbol)),
-  ];
 
-  return mergedResults.slice(0, 10);
+  const seen = new Set(koreanResults.map(r => r.symbol));
+  const mergedResults = [...koreanResults, ...finnhubResults.filter(r => !seen.has(r.symbol))];
+
+  return sortByRelevance(mergedResults, query).slice(0, 10);
 }
 
 export async function GET(request: Request) {
@@ -67,11 +90,9 @@ export async function GET(request: Request) {
   }
 
   const cacheKey = `search:${query.toLowerCase()}`;
-  const result = await withCache(
-    cacheKey,
-    () => searchSymbolsRaw(query),
-    { ttlMinutes: CACHE_TTL_HOURS * 60 }
-  );
+  const result = await withCache(cacheKey, () => searchSymbolsRaw(query), {
+    ttlMinutes: CACHE_TTL_HOURS * 60,
+  });
 
   return NextResponse.json({ result });
 }

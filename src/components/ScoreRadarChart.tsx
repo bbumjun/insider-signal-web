@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { CompanyScore } from '@/lib/api/financials';
 
 interface ScoreRadarChartProps {
@@ -124,6 +126,14 @@ export default function ScoreRadarChart({ scores, symbol }: ScoreRadarChartProps
           </div>
         ))}
       </div>
+
+      <Link
+        href={`/stock/${symbol}/fundamentals`}
+        className="mt-4 flex items-center justify-center gap-1 w-full py-2 text-xs font-medium text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-lg transition-colors"
+      >
+        실적 추세 자세히 보기
+        <ChevronRight className="w-3.5 h-3.5" />
+      </Link>
     </div>
   );
 }
