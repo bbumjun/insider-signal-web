@@ -32,7 +32,10 @@ function getRecentSearches(): RecentSearch[] {
 
 function saveRecentSearch(symbol: string, description: string) {
   const searches = getRecentSearches().filter(s => s.symbol !== symbol);
-  const newSearches = [{ symbol, description, timestamp: Date.now() }, ...searches].slice(0, MAX_RECENT_SEARCHES);
+  const newSearches = [{ symbol, description, timestamp: Date.now() }, ...searches].slice(
+    0,
+    MAX_RECENT_SEARCHES
+  );
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
 }
 
@@ -89,10 +92,10 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
     setShowRecent(false);
     setIsLoading(true);
     setIsOpen(true);
-    
+
     debounceRef.current = setTimeout(async () => {
       abortControllerRef.current = new AbortController();
-      
+
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
           signal: abortControllerRef.current.signal,
@@ -147,6 +150,12 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
   };
 
   const handleFocus = () => {
+    if (!compact) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+
     if (query.length === 0 && recentSearches.length > 0) {
       setShowRecent(true);
       setIsOpen(false);
@@ -174,10 +183,10 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < listLength - 1 ? prev + 1 : prev));
+      setSelectedIndex(prev => (prev < listLength - 1 ? prev + 1 : prev));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       setShowRecent(false);
@@ -185,21 +194,28 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
   };
 
   return (
-    <div ref={containerRef} className={`relative ${compact ? 'w-full max-w-xs' : 'w-full max-w-xl mx-auto'}`}>
+    <div
+      ref={containerRef}
+      className={`relative ${compact ? 'w-full max-w-xs' : 'w-full max-w-xl mx-auto'}`}
+    >
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
-          placeholder={compact ? "종목 검색..." : "종목 검색 (예: 애플, NVDA, 테슬라)..."}
+          placeholder={compact ? '종목 검색...' : '종목 검색 (예: 애플, NVDA, 테슬라)...'}
           className={`w-full ${compact ? 'h-9 pl-8 pr-3 rounded-lg text-sm' : 'h-12 sm:h-14 pl-10 sm:pl-12 pr-20 sm:pr-24 rounded-xl sm:rounded-2xl text-sm sm:text-base'} bg-slate-900/50 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all`}
         />
         {isLoading ? (
-          <Loader2 className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500 animate-spin`} />
+          <Loader2
+            className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500 animate-spin`}
+          />
         ) : (
-          <Search className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500`} />
+          <Search
+            className={`absolute ${compact ? 'left-2.5 w-4 h-4' : 'left-3 sm:left-4 w-4 sm:w-5 h-4 sm:h-5'} top-1/2 -translate-y-1/2 text-slate-500`}
+          />
         )}
         {!compact && (
           <button
@@ -232,7 +248,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
                 <span className="text-slate-400 text-sm truncate flex-1">{item.description}</span>
                 <span
                   role="button"
-                  onClick={(e) => handleRemoveRecent(e, item.symbol)}
+                  onClick={e => handleRemoveRecent(e, item.symbol)}
                   className="p-1 rounded hover:bg-slate-700 text-slate-500 hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -270,9 +286,7 @@ export default function SearchBar({ compact = false }: SearchBarProps) {
               </li>
             ))
           ) : (
-            <li className="px-4 py-3 text-slate-500 text-sm text-center">
-              검색 결과가 없습니다
-            </li>
+            <li className="px-4 py-3 text-slate-500 text-sm text-center">검색 결과가 없습니다</li>
           )}
         </ul>
       )}
