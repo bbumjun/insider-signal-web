@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createChart, ColorType, AreaSeries, HistogramSeries, createSeriesMarkers, SeriesMarker } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  AreaSeries,
+  HistogramSeries,
+  createSeriesMarkers,
+  SeriesMarker,
+} from 'lightweight-charts';
 import { StockPrice, InsiderTransaction, CompanyNews } from '@/types';
 
 interface TimelineChartProps {
@@ -13,12 +20,28 @@ interface TimelineChartProps {
   period?: '1M' | '3M' | '1Y';
 }
 
-export default function TimelineChart({ symbol, prices, insiderTransactions, news, period = '3M' }: TimelineChartProps) {
+export default function TimelineChart({
+  symbol,
+  prices,
+  insiderTransactions,
+  news,
+  period = '3M',
+}: TimelineChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const { buyData, sellData, totalBuy, totalSell, transactionsByDate, newsByDate } = useMemo(() => {
+  const {
+    buyData,
+    sellData,
+    totalBuy,
+    totalSell,
+    transactionsByDate,
+    newsByDate,
+    buyInsiders,
+    sellInsiders,
+    openMarketBuy,
+  } = useMemo(() => {
     const buyMap = new Map<string, number>();
     const sellMap = new Map<string, number>();
     const transactionsByDate = new Map<string, InsiderTransaction[]>();
@@ -26,29 +49,58 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     let totalBuy = 0;
     let totalSell = 0;
 
+    const buyInsiderMap = new Map<string, number>();
+    const sellInsiderMap = new Map<string, number>();
+    const openMarketInsiderMap = new Map<string, number>();
+    let openMarketTotal = 0;
+
     insiderTransactions.forEach(t => {
       const value = t.share * (t.transactionPrice || 1);
       const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
       const isSell = t.transactionCode === 'S';
-      
+      const isOpenMarket = t.transactionCode === 'P';
+
       if (isBuy || isSell) {
         if (!transactionsByDate.has(t.transactionDate)) {
           transactionsByDate.set(t.transactionDate, []);
         }
         transactionsByDate.get(t.transactionDate)!.push(t);
       }
-      
+
       if (isBuy) {
         buyMap.set(t.transactionDate, (buyMap.get(t.transactionDate) || 0) + value);
         totalBuy += value;
+        buyInsiderMap.set(t.name, (buyInsiderMap.get(t.name) || 0) + value);
       } else if (isSell) {
         sellMap.set(t.transactionDate, (sellMap.get(t.transactionDate) || 0) + value);
         totalSell += value;
+        sellInsiderMap.set(t.name, (sellInsiderMap.get(t.name) || 0) + value);
+      }
+
+      if (isOpenMarket) {
+        openMarketTotal += value;
+        openMarketInsiderMap.set(t.name, (openMarketInsiderMap.get(t.name) || 0) + value);
       }
     });
 
+    const getTopInsider = (map: Map<string, number>) => {
+      if (map.size === 0) return null;
+      const sorted = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+      const topName = sorted[0][0];
+      const count = map.size;
+      return { name: topName, count };
+    };
+
+    const buyInsiders = getTopInsider(buyInsiderMap);
+    const sellInsiders = getTopInsider(sellInsiderMap);
+    const openMarketInsiders = getTopInsider(openMarketInsiderMap);
+    const openMarketBuy =
+      openMarketTotal > 0 ? { total: openMarketTotal, insiders: openMarketInsiders } : null;
+
     news.forEach(n => {
-      const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
+      const date = n.datetime
+        ? new Date(n.datetime * 1000).toISOString().split('T')[0]
+        : n.publishedAt?.split('T')[0];
       if (!date) return;
       if (!newsByDate.has(date)) {
         newsByDate.set(date, []);
@@ -64,7 +116,17 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       .map(([time, value]) => ({ time, value: -value, color: '#ef4444' }))
       .sort((a, b) => a.time.localeCompare(b.time));
 
-    return { buyData, sellData, totalBuy, totalSell, transactionsByDate, newsByDate };
+    return {
+      buyData,
+      sellData,
+      totalBuy,
+      totalSell,
+      transactionsByDate,
+      newsByDate,
+      buyInsiders,
+      sellInsiders,
+      openMarketBuy,
+    };
   }, [insiderTransactions, news]);
 
   useEffect(() => {
@@ -139,20 +201,20 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     const markers: SeriesMarker<string>[] = [];
     const seenInsider = new Set<string>();
     const openMarketBuyDates = new Set<string>();
-    
+
     insiderTransactions.forEach(t => {
       if (t.transactionCode === 'P') {
         openMarketBuyDates.add(t.transactionDate);
       }
     });
-    
+
     insiderTransactions.forEach(t => {
       const isOpenMarketBuy = t.transactionCode === 'P';
       const isBuy = ['P', 'A', 'M'].includes(t.transactionCode);
       const isSell = t.transactionCode === 'S';
-      
+
       if (!isBuy && !isSell) return;
-      
+
       const key = `${t.transactionDate}-${isBuy ? 'BUY' : 'SELL'}`;
       if (seenInsider.has(key)) return;
       seenInsider.add(key);
@@ -161,7 +223,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
         const hasOpenMarketBuy = openMarketBuyDates.has(t.transactionDate);
         markers.push({
           time: t.transactionDate,
-          position: hasOpenMarketBuy && isBuy ? 'aboveBar' : (isBuy ? 'belowBar' : 'aboveBar'),
+          position: hasOpenMarketBuy && isBuy ? 'aboveBar' : isBuy ? 'belowBar' : 'aboveBar',
           color: isBuy ? (hasOpenMarketBuy ? '#fbbf24' : '#10b981') : '#ef4444',
           shape: 'circle',
           text: hasOpenMarketBuy && isBuy ? '★' : '',
@@ -171,12 +233,20 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const seenNews = new Set<string>();
     news.forEach(n => {
-      const date = n.datetime ? new Date(n.datetime * 1000).toISOString().split('T')[0] : n.publishedAt?.split('T')[0];
+      const date = n.datetime
+        ? new Date(n.datetime * 1000).toISOString().split('T')[0]
+        : n.publishedAt?.split('T')[0];
       if (!date || seenNews.has(date)) return;
       seenNews.add(date);
       const priceAtDate = prices.find(p => p.date === date)?.close;
       if (priceAtDate) {
-        markers.push({ time: date, position: 'inBar', color: '#3b82f6', shape: 'circle', text: '' });
+        markers.push({
+          time: date,
+          position: 'inBar',
+          color: '#3b82f6',
+          shape: 'circle',
+          text: '',
+        });
       }
     });
 
@@ -197,7 +267,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
     const markerDates = new Set<string>();
     markers.forEach(m => markerDates.add(m.time));
 
-    chart.subscribeClick((param) => {
+    chart.subscribeClick(param => {
       if (!param.time) return;
       const dateStr = param.time as string;
       if (markerDates.has(dateStr)) {
@@ -210,13 +280,14 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       const transactions = transactionsByDate.get(dateStr);
       const newsItems = newsByDate.get(dateStr);
-      
+
       if ((!transactions || transactions.length === 0) && (!newsItems || newsItems.length === 0)) {
         if (!tooltipLocked) hideTooltip();
         return;
       }
 
-      const buyTransactions = transactions?.filter(t => ['P', 'A', 'M'].includes(t.transactionCode)) || [];
+      const buyTransactions =
+        transactions?.filter(t => ['P', 'A', 'M'].includes(t.transactionCode)) || [];
       const sellTransactions = transactions?.filter(t => t.transactionCode === 'S') || [];
 
       const formatValue = (v: number) => {
@@ -228,11 +299,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       const getCodeLabel = (code: string) => {
         switch (code) {
-          case 'P': return '공개시장 매수';
-          case 'A': return '주식 수여';
-          case 'M': return '옵션 행사';
-          case 'S': return '공개시장 매도';
-          default: return code;
+          case 'P':
+            return '공개시장 매수';
+          case 'A':
+            return '주식 수여';
+          case 'M':
+            return '옵션 행사';
+          case 'S':
+            return '공개시장 매도';
+          default:
+            return code;
         }
       };
 
@@ -244,7 +320,17 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       html += `</div>`;
 
       const groupByPerson = (txns: InsiderTransaction[]) => {
-        const grouped = new Map<string, { name: string; totalShares: number; totalValue: number; codes: Set<string>; avgPrice: number; txnCount: number }>();
+        const grouped = new Map<
+          string,
+          {
+            name: string;
+            totalShares: number;
+            totalValue: number;
+            codes: Set<string>;
+            avgPrice: number;
+            txnCount: number;
+          }
+        >();
         txns.forEach(t => {
           const existing = grouped.get(t.name);
           const value = t.share * (t.transactionPrice || 1);
@@ -254,7 +340,14 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
             existing.codes.add(t.transactionCode);
             existing.txnCount += 1;
           } else {
-            grouped.set(t.name, { name: t.name, totalShares: t.share, totalValue: value, codes: new Set([t.transactionCode]), avgPrice: t.transactionPrice || 0, txnCount: 1 });
+            grouped.set(t.name, {
+              name: t.name,
+              totalShares: t.share,
+              totalValue: value,
+              codes: new Set([t.transactionCode]),
+              avgPrice: t.transactionPrice || 0,
+              txnCount: 1,
+            });
           }
         });
         return Array.from(grouped.values()).map(g => ({
@@ -264,16 +357,19 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       };
 
       const getCodesLabel = (codes: Set<string>) => {
-        return Array.from(codes).map(code => getCodeLabel(code)).join(', ');
+        return Array.from(codes)
+          .map(code => getCodeLabel(code))
+          .join(', ');
       };
 
       const hasOpenMarketBuy = buyTransactions.some(t => t.transactionCode === 'P');
-      
+
       if (buyTransactions.length > 0) {
         const groupedBuys = groupByPerson(buyTransactions);
         html += '<div class="mb-2">';
         if (hasOpenMarketBuy) {
-          html += '<div class="text-yellow-400 font-semibold mb-1 flex items-center gap-1">⭐ 강력 매수 시그널</div>';
+          html +=
+            '<div class="text-yellow-400 font-semibold mb-1 flex items-center gap-1">⭐ 강력 매수 시그널</div>';
         } else {
           html += '<div class="text-emerald-400 font-semibold mb-1">매수</div>';
         }
@@ -355,7 +451,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       tooltipRef.current.style.top = `${top}px`;
     };
 
-    chart.subscribeCrosshairMove((param) => {
+    chart.subscribeCrosshairMove(param => {
       if (!param.time || !param.point) {
         if (!isTouchDevice) hideTooltip();
         return;
@@ -376,7 +472,7 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
     const handleResize = () => {
       if (chartContainerRef.current) {
-        chart.applyOptions({ 
+        chart.applyOptions({
           width: chartContainerRef.current.clientWidth,
           height: chartContainerRef.current.clientHeight || 300,
         });
@@ -392,7 +488,16 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
 
       chart.remove();
     };
-  }, [prices, insiderTransactions, news, buyData, sellData, transactionsByDate, newsByDate, period]);
+  }, [
+    prices,
+    insiderTransactions,
+    news,
+    buyData,
+    sellData,
+    transactionsByDate,
+    newsByDate,
+    period,
+  ]);
 
   if (!prices || prices.length === 0) {
     return (
@@ -421,14 +526,51 @@ export default function TimelineChart({ symbol, prices, insiderTransactions, new
       <div className="flex items-center justify-between px-1 sm:px-2 pt-1">
         <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
           <span className="text-slate-500 hidden sm:inline">내부자 거래</span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500" />
-            <span className="text-emerald-400">매수 {formatValue(totalBuy)}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-500" />
-            <span className="text-red-400">매도 {formatValue(totalSell)}</span>
-          </span>
+          {totalBuy > 0 && (
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500" />
+              <span className="text-emerald-400">
+                매수 {formatValue(totalBuy)}
+                {buyInsiders && (
+                  <span className="text-emerald-400/70 ml-1">
+                    ({buyInsiders.name}
+                    {buyInsiders.count > 1 ? ` 외 ${buyInsiders.count - 1}명` : ''})
+                  </span>
+                )}
+              </span>
+            </span>
+          )}
+          {totalSell > 0 && (
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-red-500" />
+              <span className="text-red-400">
+                매도 {formatValue(totalSell)}
+                {sellInsiders && (
+                  <span className="text-red-400/70 ml-1">
+                    ({sellInsiders.name}
+                    {sellInsiders.count > 1 ? ` 외 ${sellInsiders.count - 1}명` : ''})
+                  </span>
+                )}
+              </span>
+            </span>
+          )}
+          {openMarketBuy && (
+            <span className="flex items-center gap-1">
+              <span className="text-yellow-400">★</span>
+              <span className="text-yellow-400">
+                공개매수 {formatValue(openMarketBuy.total)}
+                {openMarketBuy.insiders && (
+                  <span className="text-yellow-400/70 ml-1">
+                    ({openMarketBuy.insiders.name}
+                    {openMarketBuy.insiders.count > 1
+                      ? ` 외 ${openMarketBuy.insiders.count - 1}명`
+                      : ''}
+                    )
+                  </span>
+                )}
+              </span>
+            </span>
+          )}
         </div>
       </div>
     </div>
