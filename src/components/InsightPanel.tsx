@@ -180,6 +180,22 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
       setCachedAt(null);
 
       try {
+        const cacheResponse = await fetch(`/api/stock/${symbol}/analysis`, {
+          signal: controller.signal,
+        });
+
+        if (cacheResponse.status === 200) {
+          const cachedAtHeader = cacheResponse.headers.get('X-Cached-At');
+          if (cachedAtHeader) {
+            setCachedAt(cachedAtHeader);
+          }
+          const text = await cacheResponse.text();
+          setInsight(text);
+          setLoading(false);
+          setFetchedSymbol(symbol);
+          return;
+        }
+
         const response = await fetch(`/api/stock/${symbol}/analysis`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -191,13 +207,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           throw new Error('Failed to fetch analysis');
         }
 
-        const isStreaming = response.headers.get('X-Cache') === 'MISS';
-        const cachedAtHeader = response.headers.get('X-Cached-At');
-        if (cachedAtHeader) {
-          setCachedAt(cachedAtHeader);
-        }
-
-        if (isStreaming && response.body) {
+        if (response.body) {
           setStreaming(true);
           setLoading(false);
 
@@ -218,13 +228,6 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           }
 
           setStreaming(false);
-        } else {
-          const text = await response.text();
-          if (text.startsWith('[ERROR]')) {
-            throw new Error(text.replace('[ERROR] ', ''));
-          }
-          setInsight(text);
-          setLoading(false);
         }
 
         setFetchedSymbol(symbol);

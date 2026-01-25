@@ -2,11 +2,8 @@ import { generateAnalysisStream } from '@/lib/api/gemini';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { StockData } from '@/types';
 
-export async function POST(request: Request, { params }: { params: Promise<{ symbol: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
-  const body: StockData = await request.json();
-  const { prices, insiderTransactions, news } = body;
-
   const supabase = createServerSupabaseClient();
 
   const todayStart = new Date();
@@ -31,6 +28,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ sym
       },
     });
   }
+
+  return new Response(null, {
+    status: 204,
+    headers: { 'X-Cache': 'MISS' },
+  });
+}
+
+export async function POST(request: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  const { symbol } = await params;
+  const body: StockData = await request.json();
+  const { prices, insiderTransactions, news } = body;
+
+  const supabase = createServerSupabaseClient();
 
   console.log(`[Cache Miss] Streaming analysis for ${symbol} via Gemini`);
 
