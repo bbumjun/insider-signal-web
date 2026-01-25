@@ -97,9 +97,11 @@ export default function CompanyDescription({ symbol }: CompanyDescriptionProps) 
         <h3 className="text-base sm:text-lg font-bold">기업 소개</h3>
       </div>
 
-      <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-4">
-        {profile.description}
-      </p>
+      <div className="text-sm sm:text-base text-slate-300 leading-relaxed mb-4 space-y-1">
+        {profile.description.split('\n').map((line, idx) => (
+          <p key={idx}>{line}</p>
+        ))}
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-slate-400">
         {profile.sector && (
