@@ -4,9 +4,14 @@ interface CacheOptions {
   ttlMinutes: number;
 }
 
+export interface CachedResult<T> {
+  data: T;
+  cachedAt: string | null;
+}
+
 export async function getCached<T>(key: string): Promise<T | null> {
   const supabase = createServerSupabaseClient();
-  
+
   const { data } = await supabase
     .from('api_cache')
     .select('data')
@@ -17,46 +22,58 @@ export async function getCached<T>(key: string): Promise<T | null> {
   return data?.data as T | null;
 }
 
-export async function getCachedWithoutExpiry<T>(key: string): Promise<T | null> {
+export async function getCachedWithMeta<T>(key: string): Promise<CachedResult<T> | null> {
   const supabase = createServerSupabaseClient();
-  
+
   const { data } = await supabase
     .from('api_cache')
-    .select('data')
+    .select('data, created_at')
     .eq('cache_key', key)
+    .gt('expires_at', new Date().toISOString())
     .single();
+
+  if (!data) return null;
+  return { data: data.data as T, cachedAt: data.created_at };
+}
+
+export async function getCachedWithoutExpiry<T>(key: string): Promise<T | null> {
+  const supabase = createServerSupabaseClient();
+
+  const { data } = await supabase.from('api_cache').select('data').eq('cache_key', key).single();
 
   return data?.data as T | null;
 }
 
 export async function setCache<T>(key: string, data: T, options: CacheOptions): Promise<void> {
   const supabase = createServerSupabaseClient();
-  
+
   const expiresAt = new Date();
   expiresAt.setMinutes(expiresAt.getMinutes() + options.ttlMinutes);
 
-  await supabase
-    .from('api_cache')
-    .upsert({
+  await supabase.from('api_cache').upsert(
+    {
       cache_key: key,
       data,
       expires_at: expiresAt.toISOString(),
-    }, { onConflict: 'cache_key' });
+    },
+    { onConflict: 'cache_key' }
+  );
 }
 
 export async function setCachePermanent<T>(key: string, data: T): Promise<void> {
   const supabase = createServerSupabaseClient();
-  
+
   const farFuture = new Date();
   farFuture.setFullYear(farFuture.getFullYear() + 10);
 
-  await supabase
-    .from('api_cache')
-    .upsert({
+  await supabase.from('api_cache').upsert(
+    {
       cache_key: key,
       data,
       expires_at: farFuture.toISOString(),
-    }, { onConflict: 'cache_key' });
+    },
+    { onConflict: 'cache_key' }
+  );
 }
 
 export async function withCache<T>(
@@ -74,4 +91,21 @@ export async function withCache<T>(
   const data = await fetcher();
   await setCache(key, data, options);
   return data;
+}
+
+export async function withCacheMeta<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  options: CacheOptions
+): Promise<CachedResult<T>> {
+  const cached = await getCachedWithMeta<T>(key);
+  if (cached) {
+    console.log(`[Cache Hit] ${key}`);
+    return cached;
+  }
+
+  console.log(`[Cache Miss] ${key}`);
+  const data = await fetcher();
+  await setCache(key, data, options);
+  return { data, cachedAt: null };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles, Loader2, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { StockData } from '@/types';
 
 interface InsightPanelProps {
@@ -26,7 +26,7 @@ function parseSignalData(insight: string): SignalData | null {
 
 function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
   const [animated, setAnimated] = useState(false);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setAnimated(true), 100);
     return () => clearTimeout(timer);
@@ -35,11 +35,11 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
   const clampedValue = Math.max(1, Math.min(5, value));
   const percentage = ((clampedValue - 1) / 4) * 100;
   const animatedPercentage = animated ? percentage : 0;
-  
+
   const isBuy = type === 'buy';
   const label = isBuy ? '매수' : '매도';
   const subLabel = isBuy ? 'BUY SIGNAL' : 'SELL SIGNAL';
-  
+
   const gradientId = `gradient-${type}`;
   const glowColor = isBuy ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)';
   const strokeColor = isBuy ? 'url(#gradient-buy)' : 'url(#gradient-sell)';
@@ -55,9 +55,9 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
   return (
     <div className="flex flex-col items-center">
       <div className={`relative w-[100px] h-[58px] sm:w-[120px] sm:h-[68px]`}>
-        <svg 
-          width="100%" 
-          height="100%" 
+        <svg
+          width="100%"
+          height="100%"
           viewBox={`0 0 ${size} ${size / 2 + strokeWidth}`}
           className="overflow-visible"
         >
@@ -71,22 +71,22 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
               <stop offset="100%" stopColor="#ef4444" />
             </linearGradient>
             <filter id={`glow-${type}`} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
           <path
-            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
             stroke="#1e293b"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
           <path
-            d={`M ${strokeWidth/2} ${size/2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth/2} ${size/2}`}
+            d={`M ${strokeWidth / 2} ${size / 2} A ${radius} ${radius} 0 0 1 ${size - strokeWidth / 2} ${size / 2}`}
             fill="none"
             stroke={strokeColor}
             strokeWidth={strokeWidth}
@@ -97,11 +97,11 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
             className="transition-all duration-1000 ease-out"
             style={{ filter: `drop-shadow(0 0 6px ${glowColor})` }}
           />
-          {[0, 1, 2, 3, 4].map((tick) => {
+          {[0, 1, 2, 3, 4].map(tick => {
             const angle = Math.PI - (tick / 4) * Math.PI;
-            const innerRadius = radius - strokeWidth/2 - 4;
-            const x = size/2 + innerRadius * Math.cos(angle);
-            const y = size/2 - innerRadius * Math.sin(angle);
+            const innerRadius = radius - strokeWidth / 2 - 4;
+            const x = size / 2 + innerRadius * Math.cos(angle);
+            const y = size / 2 - innerRadius * Math.sin(angle);
             return (
               <circle
                 key={tick}
@@ -118,9 +118,7 @@ function SignalGauge({ value, type }: { value: number; type: 'buy' | 'sell' }) {
           <span className={`text-2xl sm:text-3xl font-bold ${textColor} leading-none`}>
             {clampedValue}
           </span>
-          <span className="text-[8px] sm:text-[9px] text-slate-500 tracking-wider mt-0.5">
-            / 5
-          </span>
+          <span className="text-[8px] sm:text-[9px] text-slate-500 tracking-wider mt-0.5">/ 5</span>
         </div>
       </div>
       <div className="mt-2 text-center">
@@ -167,6 +165,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchedSymbol, setFetchedSymbol] = useState<string | null>(null);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (fetchedSymbol === symbol) return;
@@ -178,7 +177,8 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
       setStreaming(false);
       setError(null);
       setInsight(null);
-      
+      setCachedAt(null);
+
       try {
         const response = await fetch(`/api/stock/${symbol}/analysis`, {
           method: 'POST',
@@ -192,11 +192,15 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
         }
 
         const isStreaming = response.headers.get('X-Cache') === 'MISS';
-        
+        const cachedAtHeader = response.headers.get('X-Cached-At');
+        if (cachedAtHeader) {
+          setCachedAt(cachedAtHeader);
+        }
+
         if (isStreaming && response.body) {
           setStreaming(true);
           setLoading(false);
-          
+
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let accumulated = '';
@@ -204,15 +208,15 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             accumulated += decoder.decode(value, { stream: true });
             setInsight(accumulated);
           }
-          
+
           if (accumulated.startsWith('[ERROR]')) {
             throw new Error(accumulated.replace('[ERROR] ', ''));
           }
-          
+
           setStreaming(false);
         } else {
           const text = await response.text();
@@ -222,7 +226,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           setInsight(text);
           setLoading(false);
         }
-        
+
         setFetchedSymbol(symbol);
       } catch (err) {
         if ((err as Error).name === 'AbortError') return;
@@ -234,7 +238,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
     };
 
     fetchInsight();
-    
+
     return () => controller.abort();
   }, [symbol, data, fetchedSymbol]);
 
@@ -246,9 +250,11 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin text-emerald-500/70" />
-              <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-emerald-500/70">AI 분석 중...</span>
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-emerald-500/70">
+                AI 분석 중...
+              </span>
             </div>
-            
+
             <div className="space-y-1.5 sm:space-y-2">
               <div className="h-5 w-24 rounded bg-slate-700/50" />
               <div className="h-4 w-full rounded bg-slate-800/50" />
@@ -319,33 +325,35 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
             {(() => {
               const signalData = parseSignalData(insight);
               const cleanedInsight = insight.replace(/<!--SIGNAL:\{.*?\}-->/g, '').trim();
-              
+
               return cleanedInsight.split('\n\n').map((section, idx) => {
                 const lines = section.trim().split('\n');
                 const header = lines[0];
                 const content = lines.slice(1);
-                
+
                 if (header.includes('📈') && signalData) {
                   return <SignalGaugeSection key={idx} signalData={signalData} />;
                 }
-                
+
                 let headerColor = 'text-slate-200';
                 if (header.includes('📊')) headerColor = 'text-blue-400';
                 if (header.includes('📈')) headerColor = 'text-cyan-400';
                 if (header.includes('🎯')) headerColor = 'text-emerald-400';
                 if (header.includes('⚠️')) headerColor = 'text-amber-400';
                 if (header.includes('💡')) headerColor = 'text-purple-400';
-                
+
                 return (
                   <div key={idx} className="space-y-1.5 sm:space-y-2">
-                    <h3 className={`text-sm sm:text-base font-bold ${headerColor} flex items-center gap-2`}>
+                    <h3
+                      className={`text-sm sm:text-base font-bold ${headerColor} flex items-center gap-2`}
+                    >
                       {header}
                     </h3>
                     <div className="pl-3 sm:pl-4 space-y-1 sm:space-y-1.5">
                       {content.map((line, lineIdx) => {
                         const trimmed = line.trim();
                         if (!trimmed || trimmed.includes('SIGNAL:')) return null;
-                        
+
                         if (trimmed.startsWith('•')) {
                           return (
                             <div key={lineIdx} className="flex gap-2 text-sm leading-relaxed">
@@ -354,7 +362,7 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
                             </div>
                           );
                         }
-                        
+
                         return (
                           <p key={lineIdx} className="text-sm leading-relaxed">
                             {formatText(trimmed)}
@@ -367,10 +375,22 @@ export default function InsightPanel({ symbol, data }: InsightPanelProps) {
               });
             })()}
           </div>
-          <div className="pt-4 sm:pt-6 border-t border-slate-800">
+          <div className="pt-4 sm:pt-6 border-t border-slate-800 flex items-center justify-between">
             <p className="text-[9px] sm:text-[10px] text-slate-500 italic">
-              AI 생성 콘텐츠는 부정확할 수 있습니다. 데이터는 매일 갱신됩니다.
+              AI 생성 콘텐츠는 부정확할 수 있습니다.
             </p>
+            {cachedAt && (
+              <span className="flex items-center gap-1 text-[9px] sm:text-[10px] text-slate-600">
+                <Clock className="w-3 h-3" />
+                {new Date(cachedAt).toLocaleDateString('ko-KR', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}{' '}
+                생성
+              </span>
+            )}
           </div>
         </div>
       )}

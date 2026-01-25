@@ -2,10 +2,7 @@ import { generateAnalysisStream } from '@/lib/api/gemini';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { StockData } from '@/types';
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ symbol: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
   const body: StockData = await request.json();
   const { prices, insiderTransactions, news } = body;
@@ -17,7 +14,7 @@ export async function POST(
 
   const { data: cached } = await supabase
     .from('ai_insights')
-    .select('content')
+    .select('content, generated_at')
     .eq('symbol', symbol.toUpperCase())
     .gt('generated_at', todayStart.toISOString())
     .order('generated_at', { ascending: false })
@@ -30,12 +27,13 @@ export async function POST(
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'X-Cache': 'HIT',
+        'X-Cached-At': cached.generated_at,
       },
     });
   }
 
   console.log(`[Cache Miss] Streaming analysis for ${symbol} via Gemini`);
-  
+
   const encoder = new TextEncoder();
   let fullContent = '';
 
@@ -43,29 +41,32 @@ export async function POST(
     async start(controller) {
       try {
         const generator = generateAnalysisStream(symbol, { prices, insiderTransactions, news });
-        
+
         for await (const chunk of generator) {
           fullContent += chunk;
           controller.enqueue(encoder.encode(chunk));
         }
-        
+
         controller.close();
 
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
 
-        supabase.from('ai_insights').insert({
-          symbol: symbol.toUpperCase(),
-          content: fullContent,
-          expires_at: tomorrow.toISOString(),
-        }).then(({ error }) => {
-          if (error) {
-            console.error('[Supabase Insert Error]', error);
-          } else {
-            console.log(`[Cache Saved] ${symbol}`);
-          }
-        });
+        supabase
+          .from('ai_insights')
+          .insert({
+            symbol: symbol.toUpperCase(),
+            content: fullContent,
+            expires_at: tomorrow.toISOString(),
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('[Supabase Insert Error]', error);
+            } else {
+              console.log(`[Cache Saved] ${symbol}`);
+            }
+          });
       } catch (error) {
         const err = error as Error;
         console.error('[Analysis Error]', {

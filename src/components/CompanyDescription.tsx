@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Building2, Globe, Users, ExternalLink } from 'lucide-react';
+import { Building2, Globe, Users, ExternalLink, DollarSign, Clock } from 'lucide-react';
 
 interface CompanyProfile {
   symbol: string;
@@ -12,6 +12,8 @@ interface CompanyProfile {
   website: string | null;
   employees: number | null;
   country: string | null;
+  marketCap: number | null;
+  cachedAt: string | null;
 }
 
 interface CompanyDescriptionProps {
@@ -68,6 +70,26 @@ export default function CompanyDescription({ symbol }: CompanyDescriptionProps) 
     return `${num}명`;
   };
 
+  const formatMarketCap = (num: number) => {
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  const formatCachedAt = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '어제';
+    if (diffDays < 7) return `${diffDays}일 전`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`;
+    return `${Math.floor(diffDays / 30)}개월 전`;
+  };
+
   return (
     <section className="bg-slate-900/40 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-3">
@@ -98,6 +120,12 @@ export default function CompanyDescription({ symbol }: CompanyDescriptionProps) 
             <span className="text-slate-300">{formatEmployees(profile.employees)}</span>
           </span>
         )}
+        {profile.marketCap && (
+          <span className="flex items-center gap-1">
+            <DollarSign className="w-3.5 h-3.5" />
+            <span className="text-slate-300">{formatMarketCap(profile.marketCap)}</span>
+          </span>
+        )}
         {profile.website && (
           <a
             href={profile.website}
@@ -111,6 +139,12 @@ export default function CompanyDescription({ symbol }: CompanyDescriptionProps) 
           </a>
         )}
       </div>
+      {profile.cachedAt && (
+        <div className="mt-3 pt-3 border-t border-slate-800/50 flex items-center gap-1 text-[10px] text-slate-600">
+          <Clock className="w-3 h-3" />
+          <span>{formatCachedAt(profile.cachedAt)} 업데이트</span>
+        </div>
+      )}
     </section>
   );
 }

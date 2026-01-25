@@ -5,8 +5,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ symb
   const { symbol } = await params;
 
   try {
-    const profile = await fetchCompanyProfile(symbol);
-    return NextResponse.json(profile);
+    const { data: profile, cachedAt } = await fetchCompanyProfile(symbol);
+    return NextResponse.json({ ...profile, cachedAt });
   } catch (error) {
     console.error('Failed to fetch company profile:', error);
     return NextResponse.json({ error: 'Failed to fetch company profile' }, { status: 500 });

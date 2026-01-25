@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import YahooFinance from 'yahoo-finance2';
-import { withCache } from '@/lib/cache/supabaseCache';
+import { withCacheMeta, CachedResult } from '@/lib/cache/supabaseCache';
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -17,6 +17,7 @@ export interface CompanyProfile {
   website: string | null;
   employees: number | null;
   country: string | null;
+  marketCap: number | null;
 }
 
 interface YahooAssetProfile {
@@ -29,18 +30,22 @@ interface YahooAssetProfile {
 }
 
 async function translateAndSummarize(englishText: string, companyName: string): Promise<string> {
-  const prompt = `다음은 "${companyName}" 기업에 대한 영문 설명입니다. 
-이를 한국어로 번역하고 핵심만 2-3문장으로 요약해주세요.
-투자자가 이 기업이 무엇을 하는 회사인지 빠르게 파악할 수 있도록 작성해주세요.
+  const prompt = `"${companyName}" 기업 설명을 한국어로 요약해줘.
 
 영문 설명:
 ${englishText}
 
+출력 형식:
+• [핵심 사업 한 줄 요약]
+• [주요 제품/서비스]
+• [적용 분야 또는 고객군]
+
 규칙:
-- 2-3문장으로 간결하게
-- 주요 사업 영역과 핵심 제품/서비스 언급
-- 마크다운 사용 금지
-- 문장은 "~하는 기업이다", "~를 제공한다" 등 서술형으로 종결`;
+- 위 형식대로 bullet point 3개로만 작성
+- 각 bullet은 50자 이내로 작성
+- "한국어 번역", "요약" 같은 메타 문구 절대 금지
+- 회사명으로 시작하지 말 것
+- 마크다운 사용 금지 (• 만 사용)`;
 
   const maxRetries = 3;
   let lastError: Error | null = null;
@@ -104,11 +109,14 @@ async function fetchCompanyProfileRaw(symbol: string): Promise<CompanyProfile> {
     website: assetProfile?.website || null,
     employees: assetProfile?.fullTimeEmployees || null,
     country: assetProfile?.country || null,
+    marketCap: quote?.marketCap || null,
   };
 }
 
-export async function fetchCompanyProfile(symbol: string): Promise<CompanyProfile> {
-  const cacheKey = `company_profile:${symbol.toUpperCase()}`;
+export async function fetchCompanyProfile(symbol: string): Promise<CachedResult<CompanyProfile>> {
+  const cacheKey = `company_profile_v4:${symbol.toUpperCase()}`;
 
-  return withCache(cacheKey, () => fetchCompanyProfileRaw(symbol), { ttlMinutes: 60 * 24 * 30 });
+  return withCacheMeta(cacheKey, () => fetchCompanyProfileRaw(symbol), {
+    ttlMinutes: 60 * 24 * 30,
+  });
 }
