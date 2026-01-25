@@ -8,6 +8,7 @@ import ShareButton from '@/components/ShareButton';
 import StockClientWrapper from '@/components/StockClientWrapper';
 import SearchBar from '@/components/SearchBar';
 import WatchlistButton from '@/components/WatchlistButton';
+import WatchlistLink from '@/components/WatchlistLink';
 import AuthButton from '@/components/AuthButton';
 
 const yahooFinance = new YahooFinance();
@@ -27,7 +28,7 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
     startDate.setDate(startDate.getDate() - 365);
     const startDateStr = startDate.toISOString().split('T')[0];
     const todayStr = new Date().toISOString().split('T')[0];
-    
+
     const [chartResult, quoteResult, insiderTransactions, news] = await Promise.all([
       yahooFinance.chart(symbol, {
         period1: startDateStr,
@@ -38,17 +39,23 @@ async function getStockData(symbol: string): Promise<StockDataWithMeta> {
       fetchCompanyNews(symbol, startDateStr, todayStr).catch(() => []),
     ]);
 
-    const companyName = quoteResult?.shortName || quoteResult?.longName || chartResult.meta?.shortName || chartResult.meta?.longName || null;
-    const changePercent = typeof quoteResult?.regularMarketChangePercent === 'number' 
-      ? quoteResult.regularMarketChangePercent 
-      : null;
-    
+    const companyName =
+      quoteResult?.shortName ||
+      quoteResult?.longName ||
+      chartResult.meta?.shortName ||
+      chartResult.meta?.longName ||
+      null;
+    const changePercent =
+      typeof quoteResult?.regularMarketChangePercent === 'number'
+        ? quoteResult.regularMarketChangePercent
+        : null;
+
     const quotes = chartResult.quotes;
     if (!quotes || quotes.length === 0) throw new Error('No price data');
 
     const prices = quotes
-      .filter((q) => q.date && q.close != null)
-      .map((q) => ({
+      .filter(q => q.date && q.close != null)
+      .map(q => ({
         date: q.date!.toISOString().split('T')[0],
         close: q.close!,
       }));
@@ -74,7 +81,10 @@ export default async function StockPage({ params }: StockPageProps) {
       <header className="border-b border-slate-800 bg-black/50 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-            <Link href="/" className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors flex-shrink-0">
+            <Link
+              href="/"
+              className="p-1.5 sm:p-2 hover:bg-slate-800 rounded-lg transition-colors flex-shrink-0"
+            >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
             <div className="h-5 sm:h-6 w-px bg-slate-800 flex-shrink-0 hidden sm:block" />
@@ -87,17 +97,20 @@ export default async function StockPage({ params }: StockPageProps) {
                   </span>
                 )}
                 {data.changePercent !== null && (
-                  <span className={`flex items-center gap-0.5 text-xs sm:text-sm font-semibold px-1.5 py-0.5 rounded ${
-                    data.changePercent >= 0 
-                      ? 'text-emerald-400 bg-emerald-500/10' 
-                      : 'text-red-400 bg-red-500/10'
-                  }`}>
+                  <span
+                    className={`flex items-center gap-0.5 text-xs sm:text-sm font-semibold px-1.5 py-0.5 rounded ${
+                      data.changePercent >= 0
+                        ? 'text-emerald-400 bg-emerald-500/10'
+                        : 'text-red-400 bg-red-500/10'
+                    }`}
+                  >
                     {data.changePercent >= 0 ? (
                       <TrendingUp className="w-3 h-3" />
                     ) : (
                       <TrendingDown className="w-3 h-3" />
                     )}
-                    {data.changePercent >= 0 ? '+' : ''}{data.changePercent.toFixed(2)}%
+                    {data.changePercent >= 0 ? '+' : ''}
+                    {data.changePercent.toFixed(2)}%
                   </span>
                 )}
               </h1>
@@ -108,6 +121,7 @@ export default async function StockPage({ params }: StockPageProps) {
               <SearchBar compact />
             </div>
             <ShareButton symbol={symbol} />
+            <WatchlistLink />
             <WatchlistButton symbol={symbol} companyName={data.companyName} />
             <AuthButton />
           </div>

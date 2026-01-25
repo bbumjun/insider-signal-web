@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import Providers from '@/components/Providers';
-import WatchlistDrawer from '@/components/WatchlistDrawer';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,10 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ fontFamily: 'Pretendard, var(--font-geist-sans), sans-serif' }}
       >
-        <Providers>
-          {children}
-          <WatchlistDrawer />
-        </Providers>
+        <Providers>{children}</Providers>
         <Analytics />
       </body>
     </html>
