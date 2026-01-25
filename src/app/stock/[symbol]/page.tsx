@@ -8,7 +8,6 @@ import ShareButton from '@/components/ShareButton';
 import StockClientWrapper from '@/components/StockClientWrapper';
 import SearchBar from '@/components/SearchBar';
 import WatchlistButton from '@/components/WatchlistButton';
-import WatchlistLink from '@/components/WatchlistLink';
 import AuthButton from '@/components/AuthButton';
 
 const yahooFinance = new YahooFinance();
@@ -121,7 +120,6 @@ export default async function StockPage({ params }: StockPageProps) {
               <SearchBar compact />
             </div>
             <ShareButton symbol={symbol} />
-            <WatchlistLink />
             <WatchlistButton symbol={symbol} companyName={data.companyName} />
             <AuthButton />
           </div>
