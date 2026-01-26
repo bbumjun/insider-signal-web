@@ -49,3 +49,15 @@ export interface FinancialTrendData {
     profitabilityTrend: 'improving' | 'stable' | 'declining' | null;
   };
 }
+
+export interface EarningsEvent {
+  symbol: string;
+  date: string;
+  hour: 'bmo' | 'amc' | 'dmh' | ''; // before market open, after market close, during market hours
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+  quarter: number | null;
+  year: number | null;
+}

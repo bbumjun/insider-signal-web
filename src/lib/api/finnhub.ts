@@ -1,4 +1,4 @@
-import { StockPrice, InsiderTransaction, CompanyNews } from '@/types';
+import { StockPrice, InsiderTransaction, CompanyNews, EarningsEvent } from '@/types';
 import { withCache, getCachedWithoutExpiry, setCachePermanent } from '@/lib/cache/supabaseCache';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
@@ -108,4 +108,44 @@ export async function fetchStockCandles(symbol: string): Promise<StockPrice[]> {
     date: new Date(data.t[i] * 1000).toISOString().split('T')[0],
     close: close,
   }));
+}
+
+// 실적 캘린더 API
+async function fetchEarningsCalendarRaw(from: string, to: string): Promise<EarningsEvent[]> {
+  const response = await fetch(
+    `${FINNHUB_BASE_URL}/calendar/earnings?from=${from}&to=${to}&token=${API_KEY}`
+  );
+  if (!response.ok) throw new Error('Failed to fetch earnings calendar');
+  const data = await response.json();
+  
+  if (!data.earningsCalendar) return [];
+  
+  return data.earningsCalendar.map((e: {
+    symbol: string;
+    date: string;
+    hour: string;
+    epsEstimate: number | null;
+    epsActual: number | null;
+    revenueEstimate: number | null;
+    revenueActual: number | null;
+    quarter: number | null;
+    year: number | null;
+  }) => ({
+    symbol: e.symbol,
+    date: e.date,
+    hour: e.hour || '',
+    epsEstimate: e.epsEstimate,
+    epsActual: e.epsActual,
+    revenueEstimate: e.revenueEstimate,
+    revenueActual: e.revenueActual,
+    quarter: e.quarter,
+    year: e.year,
+  }));
+}
+
+export async function fetchEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
+  const cacheKey = `earnings:${from}:${to}`;
+  return withCache(cacheKey, () => fetchEarningsCalendarRaw(from, to), {
+    ttlMinutes: 30, // 30분 캐시
+  });
 }
