@@ -60,4 +60,5 @@ export interface EarningsEvent {
   revenueActual: number | null;
   quarter: number | null;
   year: number | null;
+  marketCap: number | null; // 시가총액 (USD)
 }

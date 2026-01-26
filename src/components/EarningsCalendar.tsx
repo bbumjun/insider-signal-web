@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from 'lucide-react';
 import Link from 'next/link';
 import { EarningsEvent } from '@/types';
 
@@ -12,8 +20,9 @@ function getWeekDates(baseDate: Date): Date[] {
   const day = startOfWeek.getDay();
   const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // 월요일 시작
   startOfWeek.setDate(diff);
-  
-  for (let i = 0; i < 5; i++) { // 월~금
+
+  for (let i = 0; i < 5; i++) {
+    // 월~금
     const date = new Date(startOfWeek);
     date.setDate(startOfWeek.getDate() + i);
     dates.push(date);
@@ -37,7 +46,7 @@ function getWeekLabel(dates: Date[]): string {
   const last = dates[dates.length - 1];
   const firstMonth = first.getMonth() + 1;
   const lastMonth = last.getMonth() + 1;
-  
+
   if (firstMonth === lastMonth) {
     return `${first.getFullYear()}년 ${firstMonth}월 ${first.getDate()}일 - ${last.getDate()}일`;
   }
@@ -48,16 +57,14 @@ function HourBadge({ hour }: { hour: string }) {
   if (hour === 'bmo') {
     return (
       <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">
-        <Clock className="w-3 h-3" />
-        장 전
+        <Clock className="w-3 h-3" />장 전
       </span>
     );
   }
   if (hour === 'amc') {
     return (
       <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400">
-        <Clock className="w-3 h-3" />
-        장 후
+        <Clock className="w-3 h-3" />장 후
       </span>
     );
   }
@@ -70,17 +77,19 @@ function EpsIndicator({ estimate, actual }: { estimate: number | null; actual: n
       <span className="text-slate-400 text-xs">예상 ${estimate.toFixed(2)}</span>
     ) : null;
   }
-  
+
   if (estimate === null) {
     return <span className="text-slate-300 text-sm">${actual.toFixed(2)}</span>;
   }
-  
+
   const beat = actual > estimate;
   const miss = actual < estimate;
-  
+
   return (
     <div className="flex items-center gap-1">
-      <span className={`text-sm font-medium ${beat ? 'text-emerald-400' : miss ? 'text-red-400' : 'text-slate-300'}`}>
+      <span
+        className={`text-sm font-medium ${beat ? 'text-emerald-400' : miss ? 'text-red-400' : 'text-slate-300'}`}
+      >
         ${actual.toFixed(2)}
       </span>
       {beat && <TrendingUp className="w-3 h-3 text-emerald-400" />}
@@ -93,13 +102,13 @@ function EpsIndicator({ estimate, actual }: { estimate: number | null; actual: n
 
 function EarningsCard({ event }: { event: EarningsEvent }) {
   const hasActual = event.epsActual !== null;
-  
+
   return (
     <Link
       href={`/stock/${event.symbol}`}
       className={`block p-3 rounded-lg border transition-all hover:scale-[1.02] ${
-        hasActual 
-          ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' 
+        hasActual
+          ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
           : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
       }`}
     >
@@ -109,26 +118,27 @@ function EarningsCard({ event }: { event: EarningsEvent }) {
           <HourBadge hour={event.hour} />
         </div>
         {event.quarter && event.year && (
-          <span className="text-xs text-slate-500">Q{event.quarter} {event.year}</span>
+          <span className="text-xs text-slate-500">
+            Q{event.quarter} {event.year}
+          </span>
         )}
       </div>
-      
+
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <span className="text-xs text-slate-500">EPS</span>
           <EpsIndicator estimate={event.epsEstimate} actual={event.epsActual} />
         </div>
-        
+
         {(event.revenueEstimate || event.revenueActual) && (
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500">매출</span>
             <span className="text-xs text-slate-400">
-              {event.revenueActual 
+              {event.revenueActual
                 ? `$${(event.revenueActual / 1e9).toFixed(2)}B`
-                : event.revenueEstimate 
+                : event.revenueEstimate
                   ? `예상 $${(event.revenueEstimate / 1e9).toFixed(2)}B`
-                  : null
-              }
+                  : null}
             </span>
           </div>
         )}
@@ -142,18 +152,18 @@ export default function EarningsCalendar() {
   const [earnings, setEarnings] = useState<EarningsEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const weekDates = getWeekDates(currentDate);
   const weekLabel = getWeekLabel(weekDates);
-  
+
   useEffect(() => {
     async function fetchEarnings() {
       setLoading(true);
       setError(null);
-      
+
       const from = formatDate(weekDates[0]);
       const to = formatDate(weekDates[weekDates.length - 1]);
-      
+
       try {
         const res = await fetch(`/api/earnings?from=${from}&to=${to}`);
         if (!res.ok) throw new Error('Failed to fetch');
@@ -166,33 +176,36 @@ export default function EarningsCalendar() {
         setLoading(false);
       }
     }
-    
+
     fetchEarnings();
   }, [currentDate]);
-  
+
   const goToPrevWeek = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - 7);
     setCurrentDate(newDate);
   };
-  
+
   const goToNextWeek = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() + 7);
     setCurrentDate(newDate);
   };
-  
+
   const goToThisWeek = () => {
     setCurrentDate(new Date());
   };
-  
+
   // 날짜별로 실적 그룹화
-  const earningsByDate = weekDates.reduce((acc, date) => {
-    const dateStr = formatDate(date);
-    acc[dateStr] = earnings.filter(e => e.date === dateStr);
-    return acc;
-  }, {} as Record<string, EarningsEvent[]>);
-  
+  const earningsByDate = weekDates.reduce(
+    (acc, date) => {
+      const dateStr = formatDate(date);
+      acc[dateStr] = earnings.filter(e => e.date === dateStr);
+      return acc;
+    },
+    {} as Record<string, EarningsEvent[]>
+  );
+
   return (
     <div className="space-y-6">
       {/* 헤더 네비게이션 */}
@@ -204,11 +217,11 @@ export default function EarningsCalendar() {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           <div className="text-center">
             <h2 className="text-lg font-semibold">{weekLabel}</h2>
           </div>
-          
+
           <button
             onClick={goToNextWeek}
             className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
@@ -216,7 +229,7 @@ export default function EarningsCalendar() {
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-        
+
         <button
           onClick={goToThisWeek}
           className="px-3 py-1.5 text-sm bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-colors"
@@ -224,11 +237,11 @@ export default function EarningsCalendar() {
           이번 주
         </button>
       </div>
-      
+
       {/* 캘린더 그리드 */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {weekDates.map((date) => (
+          {weekDates.map(date => (
             <div key={formatDate(date)} className="space-y-3">
               <div className="h-6 bg-slate-800 rounded animate-pulse" />
               <div className="space-y-2">
@@ -242,7 +255,7 @@ export default function EarningsCalendar() {
       ) : error ? (
         <div className="text-center py-12 text-red-400">
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => setCurrentDate(new Date(currentDate))}
             className="mt-4 text-sm text-emerald-400 hover:underline"
           >
@@ -251,37 +264,36 @@ export default function EarningsCalendar() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {weekDates.map((date) => {
+          {weekDates.map(date => {
             const dateStr = formatDate(date);
             const dayEarnings = earningsByDate[dateStr] || [];
             const isToday = formatDate(new Date()) === dateStr;
-            
+
             return (
               <div key={dateStr} className="space-y-3">
-                <div className={`text-sm font-medium px-2 py-1 rounded ${
-                  isToday 
-                    ? 'bg-emerald-500/20 text-emerald-400' 
-                    : 'text-slate-400'
-                }`}>
+                <div
+                  className={`text-sm font-medium px-2 py-1 rounded ${
+                    isToday ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400'
+                  }`}
+                >
                   {formatDisplayDate(date)}
                   {dayEarnings.length > 0 && (
-                    <span className="ml-2 text-xs text-slate-500">
-                      ({dayEarnings.length})
-                    </span>
+                    <span className="ml-2 text-xs text-slate-500">({dayEarnings.length})</span>
                   )}
                 </div>
-                
+
                 <div className="space-y-2 min-h-[200px]">
                   {dayEarnings.length === 0 ? (
-                    <div className="text-center py-8 text-slate-600 text-sm">
-                      예정된 실적 없음
-                    </div>
+                    <div className="text-center py-8 text-slate-600 text-sm">예정된 실적 없음</div>
                   ) : (
                     dayEarnings
                       .sort((a, b) => {
-                        // bmo -> amc -> dmh 순서로 정렬
-                        const order = { bmo: 0, dmh: 1, amc: 2, '': 3 };
-                        return (order[a.hour as keyof typeof order] || 3) - (order[b.hour as keyof typeof order] || 3);
+                        const hourOrder = { bmo: 0, dmh: 1, amc: 2, '': 3 };
+                        const hourDiff =
+                          (hourOrder[a.hour as keyof typeof hourOrder] || 3) -
+                          (hourOrder[b.hour as keyof typeof hourOrder] || 3);
+                        if (hourDiff !== 0) return hourDiff;
+                        return (b.marketCap || 0) - (a.marketCap || 0);
                       })
                       .map((event, idx) => (
                         <EarningsCard key={`${event.symbol}-${idx}`} event={event} />
@@ -293,7 +305,7 @@ export default function EarningsCalendar() {
           })}
         </div>
       )}
-      
+
       {/* 범례 */}
       <div className="flex items-center gap-6 text-xs text-slate-500 pt-4 border-t border-slate-800">
         <div className="flex items-center gap-2">

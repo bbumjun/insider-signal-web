@@ -1,8 +1,10 @@
 import { StockPrice, InsiderTransaction, CompanyNews, EarningsEvent } from '@/types';
 import { withCache, getCachedWithoutExpiry, setCachePermanent } from '@/lib/cache/supabaseCache';
+import YahooFinance from 'yahoo-finance2';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const API_KEY = process.env.FINNHUB_API_KEY;
+const yahooFinance = new YahooFinance();
 
 const CACHE_TTL = {
   INSIDER: 60,
@@ -110,37 +112,64 @@ export async function fetchStockCandles(symbol: string): Promise<StockPrice[]> {
   }));
 }
 
-// 실적 캘린더 API
 async function fetchEarningsCalendarRaw(from: string, to: string): Promise<EarningsEvent[]> {
   const response = await fetch(
     `${FINNHUB_BASE_URL}/calendar/earnings?from=${from}&to=${to}&token=${API_KEY}`
   );
   if (!response.ok) throw new Error('Failed to fetch earnings calendar');
   const data = await response.json();
-  
+
   if (!data.earningsCalendar) return [];
-  
-  return data.earningsCalendar.map((e: {
-    symbol: string;
-    date: string;
-    hour: string;
-    epsEstimate: number | null;
-    epsActual: number | null;
-    revenueEstimate: number | null;
-    revenueActual: number | null;
-    quarter: number | null;
-    year: number | null;
-  }) => ({
-    symbol: e.symbol,
-    date: e.date,
-    hour: e.hour || '',
-    epsEstimate: e.epsEstimate,
-    epsActual: e.epsActual,
-    revenueEstimate: e.revenueEstimate,
-    revenueActual: e.revenueActual,
-    quarter: e.quarter,
-    year: e.year,
-  }));
+
+  const earningsData = data.earningsCalendar.map(
+    (e: {
+      symbol: string;
+      date: string;
+      hour: string;
+      epsEstimate: number | null;
+      epsActual: number | null;
+      revenueEstimate: number | null;
+      revenueActual: number | null;
+      quarter: number | null;
+      year: number | null;
+    }) => ({
+      symbol: e.symbol,
+      date: e.date,
+      hour: e.hour || '',
+      epsEstimate: e.epsEstimate,
+      epsActual: e.epsActual,
+      revenueEstimate: e.revenueEstimate,
+      revenueActual: e.revenueActual,
+      quarter: e.quarter,
+      year: e.year,
+      marketCap: null as number | null,
+    })
+  );
+
+  const symbols = [...new Set(earningsData.map((e: EarningsEvent) => e.symbol))];
+
+  if (symbols.length > 0) {
+    try {
+      const quotes = await yahooFinance.quote(symbols as string[], {
+        fields: ['symbol', 'marketCap'],
+      });
+
+      const marketCapMap = new Map<string, number>();
+      for (const q of quotes) {
+        if (q.symbol && q.marketCap) {
+          marketCapMap.set(q.symbol, q.marketCap);
+        }
+      }
+
+      for (const earning of earningsData) {
+        earning.marketCap = marketCapMap.get(earning.symbol) || null;
+      }
+    } catch (error) {
+      console.error('Failed to fetch market caps:', error);
+    }
+  }
+
+  return earningsData;
 }
 
 export async function fetchEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
