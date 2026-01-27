@@ -261,17 +261,19 @@ export default function EarningsCalendar() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 divide-x divide-slate-800 border border-slate-800 rounded-xl overflow-hidden">
           {weekDates.map(date => {
             const dateStr = formatDate(date);
             const dayEarnings = earningsByDate[dateStr] || [];
             const isToday = formatDate(new Date()) === dateStr;
 
             return (
-              <div key={dateStr} className="space-y-3">
+              <div key={dateStr} className={`${isToday ? 'bg-emerald-500/5' : 'bg-slate-900/30'}`}>
                 <div
-                  className={`text-sm font-medium px-2 py-1 rounded ${
-                    isToday ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400'
+                  className={`text-sm font-medium px-3 py-2.5 border-b border-slate-800 ${
+                    isToday
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'text-slate-400 bg-slate-900/50'
                   }`}
                 >
                   {formatDisplayDate(date)}
@@ -280,7 +282,7 @@ export default function EarningsCalendar() {
                   )}
                 </div>
 
-                <div className="space-y-2 min-h-[200px]">
+                <div className="p-2 space-y-2 min-h-[300px]">
                   {dayEarnings.length === 0 ? (
                     <div className="text-center py-8 text-slate-600 text-sm">예정된 실적 없음</div>
                   ) : (
