@@ -10,6 +10,7 @@ import SearchBar from '@/components/SearchBar';
 import WatchlistButton from '@/components/WatchlistButton';
 import AuthButton from '@/components/AuthButton';
 import StockPageTabs from '@/components/StockPageTabs';
+import WatchlistSidebar from '@/components/WatchlistSidebar';
 
 const yahooFinance = new YahooFinance();
 
@@ -127,11 +128,20 @@ export default async function StockPage({ params }: StockPageProps) {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="mb-6">
-          <StockPageTabs symbol={symbol} />
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="flex gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="mb-6">
+              <StockPageTabs symbol={symbol} />
+            </div>
+            <StockClientWrapper symbol={symbol} fullData={data} />
+          </div>
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-24">
+              <WatchlistSidebar />
+            </div>
+          </aside>
         </div>
-        <StockClientWrapper symbol={symbol} fullData={data} />
       </div>
     </main>
   );
