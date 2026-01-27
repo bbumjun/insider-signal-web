@@ -106,7 +106,7 @@ function EarningsCard({ event }: { event: EarningsEvent }) {
   return (
     <Link
       href={`/stock/${event.symbol}`}
-      className={`block p-3 rounded-lg border transition-all hover:scale-[1.02] ${
+      className={`block p-3 rounded-lg border transition-all hover:scale-[1.02] h-[88px] ${
         hasActual
           ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
           : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
@@ -130,18 +130,16 @@ function EarningsCard({ event }: { event: EarningsEvent }) {
           <EpsIndicator estimate={event.epsEstimate} actual={event.epsActual} />
         </div>
 
-        {(event.revenueEstimate || event.revenueActual) && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500">매출</span>
-            <span className="text-xs text-slate-400">
-              {event.revenueActual
-                ? `$${(event.revenueActual / 1e9).toFixed(2)}B`
-                : event.revenueEstimate
-                  ? `예상 $${(event.revenueEstimate / 1e9).toFixed(2)}B`
-                  : null}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-slate-500">매출</span>
+          <span className="text-xs text-slate-400">
+            {event.revenueActual
+              ? `$${(event.revenueActual / 1e9).toFixed(2)}B`
+              : event.revenueEstimate
+                ? `예상 $${(event.revenueEstimate / 1e9).toFixed(2)}B`
+                : '-'}
+          </span>
+        </div>
       </div>
     </Link>
   );
