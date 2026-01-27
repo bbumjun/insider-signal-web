@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server';
 import { withCache } from '@/lib/cache/supabaseCache';
-import { QuarterlyFinancial, FinancialTrendData } from '@/types';
-import { getQuarterlyFinancials, QuarterlyFinancialSEC } from '@/lib/api/sec-edgar';
+import { QuarterlyFinancial } from '@/types';
+import { getFinancialData, QuarterlyFinancialSEC } from '@/lib/api/sec-edgar';
 
 interface RouteParams {
   params: Promise<{ symbol: string }>;
+}
+
+interface FinancialTrendResponse {
+  symbol: string;
+  currency: string;
+  quarterly: QuarterlyFinancial[];
+  annual: QuarterlyFinancial[];
+  hasQuarterly: boolean;
+  hasAnnual: boolean;
+  latestMetrics: {
+    revenueGrowth: number | null;
+    marginTrend: 'improving' | 'stable' | 'declining' | null;
+    profitabilityTrend: 'improving' | 'stable' | 'declining' | null;
+  };
 }
 
 function calculateMargin(
@@ -38,23 +52,23 @@ function determineTrend(values: (number | null)[]): 'improving' | 'stable' | 'de
   return 'stable';
 }
 
-function findSameQuarterPrevYear(
-  quarters: QuarterlyFinancialSEC[],
+function findSamePeriodPrevYear(
+  data: QuarterlyFinancialSEC[],
   currentIndex: number
 ): QuarterlyFinancialSEC | null {
-  const current = quarters[currentIndex];
+  const current = data[currentIndex];
   const targetYear = current.fiscalYear - 1;
   const targetPeriod = current.fiscalPeriod;
 
-  return quarters.find(q => q.fiscalYear === targetYear && q.fiscalPeriod === targetPeriod) ?? null;
+  return data.find(q => q.fiscalYear === targetYear && q.fiscalPeriod === targetPeriod) ?? null;
 }
 
-function transformSECToQuarterlyFinancial(
+function transformToQuarterlyFinancial(
   secData: QuarterlyFinancialSEC[],
   index: number
 ): QuarterlyFinancial {
   const current = secData[index];
-  const prevYear = findSameQuarterPrevYear(secData, index);
+  const prevYear = findSamePeriodPrevYear(secData, index);
 
   return {
     date: current.date,
@@ -71,26 +85,35 @@ function transformSECToQuarterlyFinancial(
   };
 }
 
-async function fetchFinancialsFromSEC(symbol: string): Promise<FinancialTrendData | null> {
-  const secData = await getQuarterlyFinancials(symbol, 16);
-  if (!secData || secData.length === 0) return null;
+async function fetchFinancials(symbol: string): Promise<FinancialTrendResponse | null> {
+  const data = await getFinancialData(symbol, 16, 10);
+  if (!data) return null;
 
-  const hasValidData = secData.some(q => q.revenue !== null || q.netIncome !== null);
-  if (!hasValidData) return null;
+  const { quarterly: quarterlyRaw, annual: annualRaw, hasQuarterly, hasAnnual } = data;
 
-  const quarters: QuarterlyFinancial[] = secData.map((_, index) =>
-    transformSECToQuarterlyFinancial(secData, index)
+  if (!hasQuarterly && !hasAnnual) return null;
+
+  const quarterly: QuarterlyFinancial[] = quarterlyRaw.map((_, index) =>
+    transformToQuarterlyFinancial(quarterlyRaw, index)
   );
 
-  const recentQuarters = quarters.slice(-8);
-  const operatingMargins = recentQuarters.map(q => q.operatingMargin);
-  const netMargins = recentQuarters.map(q => q.netMargin);
-  const latestGrowth = recentQuarters[recentQuarters.length - 1]?.revenueGrowthYoY ?? null;
+  const annual: QuarterlyFinancial[] = annualRaw.map((_, index) =>
+    transformToQuarterlyFinancial(annualRaw, index)
+  );
+
+  const primaryData = hasQuarterly ? quarterly : annual;
+  const recentData = primaryData.slice(-8);
+  const operatingMargins = recentData.map(q => q.operatingMargin);
+  const netMargins = recentData.map(q => q.netMargin);
+  const latestGrowth = recentData[recentData.length - 1]?.revenueGrowthYoY ?? null;
 
   return {
     symbol: symbol.toUpperCase(),
     currency: 'USD',
-    quarters: recentQuarters,
+    quarterly: quarterly.slice(-12),
+    annual: annual.slice(-8),
+    hasQuarterly,
+    hasAnnual,
     latestMetrics: {
       revenueGrowth: latestGrowth,
       marginTrend: determineTrend(operatingMargins),
@@ -106,8 +129,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Symbol required' }, { status: 400 });
   }
 
-  const cacheKey = `financials:${symbol.toUpperCase()}`;
-  const data = await withCache(cacheKey, () => fetchFinancialsFromSEC(symbol.toUpperCase()), {
+  const cacheKey = `financials-v2:${symbol.toUpperCase()}`;
+  const data = await withCache(cacheKey, () => fetchFinancials(symbol.toUpperCase()), {
     ttlMinutes: 360,
   });
 

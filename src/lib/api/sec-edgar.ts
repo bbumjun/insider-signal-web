@@ -1,10 +1,3 @@
-/**
- * SEC EDGAR API 클라이언트
- * - 무료, 인증 불필요
- * - 10 req/sec 제한
- * - 2009년부터 historical 데이터 제공
- */
-
 import { withCache } from '@/lib/cache/supabaseCache';
 
 const SEC_USER_AGENT = 'insider-signal contact@insider-signal.com';
@@ -23,10 +16,10 @@ interface SECFact {
   val: number;
   accn: string;
   fy: number;
-  fp: string; // Q1, Q2, Q3, Q4, FY
-  form: string; // 10-Q, 10-K
+  fp: string;
+  form: string;
   filed: string;
-  frame?: string; // CY2023Q1, CY2024Q2I 등
+  frame?: string;
   start?: string;
   end: string;
 }
@@ -54,6 +47,13 @@ export interface QuarterlyFinancialSEC {
   netIncome: number | null;
   operatingIncome: number | null;
   grossProfit: number | null;
+}
+
+export interface FinancialDataResult {
+  quarterly: QuarterlyFinancialSEC[];
+  annual: QuarterlyFinancialSEC[];
+  hasQuarterly: boolean;
+  hasAnnual: boolean;
 }
 
 async function loadTickerToCikMap(): Promise<Map<string, string>> {
@@ -121,9 +121,12 @@ function isAnnualPeriod(fact: SECFact): boolean {
   return days >= 350 && days <= 380;
 }
 
-function extractQuarterlyValues(
+type PeriodType = 'quarterly' | 'annual';
+
+function extractValues(
   facts: SECCompanyFacts['facts'],
-  conceptNames: string[]
+  conceptNames: string[],
+  periodType: PeriodType
 ): Map<string, number> {
   const usGaap = facts['us-gaap'];
   if (!usGaap) return new Map();
@@ -138,30 +141,31 @@ function extractQuarterlyValues(
     const currentMap = new Map<string, number>();
     let currentMaxYear = 0;
 
-    const quarterlyFacts = concept.units.USD.filter(fact => {
+    const filteredFacts = concept.units.USD.filter(fact => {
       const isUSForm = fact.form === '10-K' || fact.form === '10-Q';
       const isForeignForm = fact.form === '20-F' || fact.form === '20-F/A' || fact.form === '6-K';
 
       if (!isUSForm && !isForeignForm) return false;
 
-      if (isQuarterlyPeriod(fact)) return true;
-      if (isForeignForm && isAnnualPeriod(fact)) return true;
-
-      return false;
+      if (periodType === 'quarterly') {
+        return isQuarterlyPeriod(fact);
+      } else {
+        return isAnnualPeriod(fact);
+      }
     });
 
-    for (const fact of quarterlyFacts) {
-      let quarterKey: string;
-      if (isAnnualPeriod(fact)) {
-        quarterKey = `${fact.fy}-FY`;
+    for (const fact of filteredFacts) {
+      let periodKey: string;
+      if (periodType === 'annual') {
+        periodKey = `${fact.fy}-FY`;
       } else if (fact.fp === 'FY') {
-        quarterKey = `${fact.fy}-Q4`;
+        periodKey = `${fact.fy}-Q4`;
       } else {
-        quarterKey = `${fact.fy}-${fact.fp}`;
+        periodKey = `${fact.fy}-${fact.fp}`;
       }
 
-      if (!currentMap.has(quarterKey)) {
-        currentMap.set(quarterKey, fact.val);
+      if (!currentMap.has(periodKey)) {
+        currentMap.set(periodKey, fact.val);
         if (fact.fy > currentMaxYear) currentMaxYear = fact.fy;
       }
     }
@@ -175,8 +179,8 @@ function extractQuarterlyValues(
   return bestMap;
 }
 
-function quarterKeyToDate(quarterKey: string): string {
-  const [year, period] = quarterKey.split('-');
+function periodKeyToDate(periodKey: string): string {
+  const [year, period] = periodKey.split('-');
   if (period === 'FY') {
     return `${year}-12-31`;
   }
@@ -186,15 +190,71 @@ function quarterKeyToDate(quarterKey: string): string {
   return `${year}-${month.toString().padStart(2, '0')}-${lastDay}`;
 }
 
-function getQuarterLabel(quarterKey: string): string {
-  const [year, period] = quarterKey.split('-');
+function getPeriodLabel(periodKey: string): string {
+  const [year, period] = periodKey.split('-');
   return `${period} ${year}`;
 }
 
-export async function getQuarterlyFinancials(
+function buildFinancialData(
+  revenueMap: Map<string, number>,
+  netIncomeMap: Map<string, number>,
+  operatingIncomeMap: Map<string, number>,
+  grossProfitMap: Map<string, number>,
+  limit: number
+): QuarterlyFinancialSEC[] {
+  const allKeys = new Set<string>();
+  [revenueMap, netIncomeMap, operatingIncomeMap, grossProfitMap].forEach(map => {
+    map.forEach((_, key) => allKeys.add(key));
+  });
+
+  const sortedKeys = Array.from(allKeys).sort((a, b) => {
+    const [yearA, pA] = a.split('-');
+    const [yearB, pB] = b.split('-');
+    const numA = parseInt(yearA) * 10 + (pA === 'FY' ? 5 : parseInt(pA.replace('Q', '')));
+    const numB = parseInt(yearB) * 10 + (pB === 'FY' ? 5 : parseInt(pB.replace('Q', '')));
+    return numA - numB;
+  });
+
+  const recentKeys = sortedKeys.slice(-limit);
+
+  return recentKeys.map(key => {
+    const [year, period] = key.split('-');
+    return {
+      date: periodKeyToDate(key),
+      quarterLabel: getPeriodLabel(key),
+      fiscalYear: parseInt(year),
+      fiscalPeriod: period,
+      revenue: revenueMap.get(key) ?? null,
+      netIncome: netIncomeMap.get(key) ?? null,
+      operatingIncome: operatingIncomeMap.get(key) ?? null,
+      grossProfit: grossProfitMap.get(key) ?? null,
+    };
+  });
+}
+
+const REVENUE_CONCEPTS = [
+  'Revenues',
+  'RevenueFromContractWithCustomerExcludingAssessedTax',
+  'SalesRevenueNet',
+  'TotalRevenuesAndOtherIncome',
+  'RevenueFromContractWithCustomerIncludingAssessedTax',
+];
+
+const NET_INCOME_CONCEPTS = [
+  'NetIncomeLoss',
+  'NetIncomeLossAvailableToCommonStockholdersBasic',
+  'ProfitLoss',
+];
+
+const OPERATING_INCOME_CONCEPTS = ['OperatingIncomeLoss', 'IncomeLossFromOperations'];
+
+const GROSS_PROFIT_CONCEPTS = ['GrossProfit'];
+
+export async function getFinancialData(
   symbol: string,
-  quarters: number = 12
-): Promise<QuarterlyFinancialSEC[] | null> {
+  quarterlyLimit: number = 12,
+  annualLimit: number = 8
+): Promise<FinancialDataResult | null> {
   const cik = await tickerToCik(symbol);
   if (!cik) {
     console.log(`CIK not found for symbol: ${symbol}`);
@@ -208,57 +268,55 @@ export async function getQuarterlyFinancials(
 
   if (!companyFacts) return null;
 
-  const revenueMap = extractQuarterlyValues(companyFacts.facts, [
-    'Revenues',
-    'RevenueFromContractWithCustomerExcludingAssessedTax',
-    'SalesRevenueNet',
-    'TotalRevenuesAndOtherIncome',
-    'RevenueFromContractWithCustomerIncludingAssessedTax',
-  ]);
+  const quarterlyRevenue = extractValues(companyFacts.facts, REVENUE_CONCEPTS, 'quarterly');
+  const quarterlyNetIncome = extractValues(companyFacts.facts, NET_INCOME_CONCEPTS, 'quarterly');
+  const quarterlyOperating = extractValues(
+    companyFacts.facts,
+    OPERATING_INCOME_CONCEPTS,
+    'quarterly'
+  );
+  const quarterlyGrossProfit = extractValues(
+    companyFacts.facts,
+    GROSS_PROFIT_CONCEPTS,
+    'quarterly'
+  );
 
-  const netIncomeMap = extractQuarterlyValues(companyFacts.facts, [
-    'NetIncomeLoss',
-    'NetIncomeLossAvailableToCommonStockholdersBasic',
-    'ProfitLoss',
-  ]);
+  const annualRevenue = extractValues(companyFacts.facts, REVENUE_CONCEPTS, 'annual');
+  const annualNetIncome = extractValues(companyFacts.facts, NET_INCOME_CONCEPTS, 'annual');
+  const annualOperating = extractValues(companyFacts.facts, OPERATING_INCOME_CONCEPTS, 'annual');
+  const annualGrossProfit = extractValues(companyFacts.facts, GROSS_PROFIT_CONCEPTS, 'annual');
 
-  const operatingIncomeMap = extractQuarterlyValues(companyFacts.facts, [
-    'OperatingIncomeLoss',
-    'IncomeLossFromOperations',
-  ]);
+  const quarterly = buildFinancialData(
+    quarterlyRevenue,
+    quarterlyNetIncome,
+    quarterlyOperating,
+    quarterlyGrossProfit,
+    quarterlyLimit
+  );
 
-  const grossProfitMap = extractQuarterlyValues(companyFacts.facts, ['GrossProfit']);
+  const annual = buildFinancialData(
+    annualRevenue,
+    annualNetIncome,
+    annualOperating,
+    annualGrossProfit,
+    annualLimit
+  );
 
-  const allQuarterKeys = new Set<string>();
-  [revenueMap, netIncomeMap, operatingIncomeMap, grossProfitMap].forEach(map => {
-    map.forEach((_, key) => allQuarterKeys.add(key));
-  });
+  const hasQuarterly =
+    quarterly.length > 0 && quarterly.some(q => q.revenue !== null || q.netIncome !== null);
+  const hasAnnual =
+    annual.length > 0 && annual.some(a => a.revenue !== null || a.netIncome !== null);
 
-  const sortedQuarters = Array.from(allQuarterKeys).sort((a, b) => {
-    const [yearA, qA] = a.split('-');
-    const [yearB, qB] = b.split('-');
-    const numA = parseInt(yearA) * 10 + parseInt(qA.replace('Q', ''));
-    const numB = parseInt(yearB) * 10 + parseInt(qB.replace('Q', ''));
-    return numA - numB;
-  });
+  return { quarterly, annual, hasQuarterly, hasAnnual };
+}
 
-  const recentQuarters = sortedQuarters.slice(-quarters);
-
-  const results: QuarterlyFinancialSEC[] = recentQuarters.map(quarterKey => {
-    const [year, quarter] = quarterKey.split('-');
-    return {
-      date: quarterKeyToDate(quarterKey),
-      quarterLabel: getQuarterLabel(quarterKey),
-      fiscalYear: parseInt(year),
-      fiscalPeriod: quarter,
-      revenue: revenueMap.get(quarterKey) ?? null,
-      netIncome: netIncomeMap.get(quarterKey) ?? null,
-      operatingIncome: operatingIncomeMap.get(quarterKey) ?? null,
-      grossProfit: grossProfitMap.get(quarterKey) ?? null,
-    };
-  });
-
-  return results;
+export async function getQuarterlyFinancials(
+  symbol: string,
+  quarters: number = 12
+): Promise<QuarterlyFinancialSEC[] | null> {
+  const result = await getFinancialData(symbol, quarters, 8);
+  if (!result) return null;
+  return result.hasQuarterly ? result.quarterly : result.annual;
 }
 
 export async function getCompanyName(symbol: string): Promise<string | null> {

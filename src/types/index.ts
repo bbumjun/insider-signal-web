@@ -42,7 +42,10 @@ export interface QuarterlyFinancial {
 export interface FinancialTrendData {
   symbol: string;
   currency: string;
-  quarters: QuarterlyFinancial[];
+  quarterly: QuarterlyFinancial[];
+  annual: QuarterlyFinancial[];
+  hasQuarterly: boolean;
+  hasAnnual: boolean;
   latestMetrics: {
     revenueGrowth: number | null;
     marginTrend: 'improving' | 'stable' | 'declining' | null;
