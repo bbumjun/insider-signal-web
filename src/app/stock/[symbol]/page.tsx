@@ -9,6 +9,7 @@ import StockClientWrapper from '@/components/StockClientWrapper';
 import SearchBar from '@/components/SearchBar';
 import WatchlistButton from '@/components/WatchlistButton';
 import AuthButton from '@/components/AuthButton';
+import StockPageTabs from '@/components/StockPageTabs';
 
 const yahooFinance = new YahooFinance();
 
@@ -127,6 +128,9 @@ export default async function StockPage({ params }: StockPageProps) {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-6">
+          <StockPageTabs symbol={symbol} />
+        </div>
         <StockClientWrapper symbol={symbol} fullData={data} />
       </div>
     </main>
