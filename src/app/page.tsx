@@ -2,7 +2,6 @@ import SearchBar from '@/components/SearchBar';
 import AuthButton from '@/components/AuthButton';
 import InsiderScreener from '@/components/InsiderScreener';
 import Logo from '@/components/Logo';
-import WatchlistLink from '@/components/WatchlistLink';
 import EarningsLink from '@/components/EarningsLink';
 
 function ChartBackground() {
@@ -100,7 +99,6 @@ export default function Home() {
           <Logo />
           <div className="flex items-center gap-2">
             <EarningsLink />
-            <WatchlistLink />
             <AuthButton />
           </div>
         </div>

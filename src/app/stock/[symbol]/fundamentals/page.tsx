@@ -4,7 +4,6 @@ import FundamentalsClient from './FundamentalsClient';
 import StockPageTabs from '@/components/StockPageTabs';
 import SearchBar from '@/components/SearchBar';
 import AuthButton from '@/components/AuthButton';
-import WatchlistSidebar from '@/components/WatchlistSidebar';
 
 interface FundamentalsPageProps {
   params: Promise<{ symbol: string }>;
@@ -38,20 +37,11 @@ export default async function FundamentalsPage({ params }: FundamentalsPageProps
         </div>
       </header>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="flex gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="mb-6">
-              <StockPageTabs symbol={symbol} />
-            </div>
-            <FundamentalsClient symbol={symbol} />
-          </div>
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-24">
-              <WatchlistSidebar />
-            </div>
-          </aside>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-6">
+          <StockPageTabs symbol={symbol} />
         </div>
+        <FundamentalsClient symbol={symbol} />
       </div>
     </main>
   );
